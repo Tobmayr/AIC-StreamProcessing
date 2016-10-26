@@ -2,6 +2,7 @@ group 'at.ac.tuwien.aic.group2.streamprocessing'
 version '0.1-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'checkstyle'
 
 sourceCompatibility = 1.8
 
@@ -11,4 +12,9 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+checkstyle {
+    configFile = new File(rootDir, "src/checkstyle/checkstyle.xml")
+    toolVersion = "6.19"
 }
