@@ -2,6 +2,7 @@ group 'at.ac.tuwien.aic.group2.streamprocessing'
 version '0.1-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'idea'
 apply plugin: 'checkstyle'
 
 sourceCompatibility = 1.8
