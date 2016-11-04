@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Interface for provides which yield a stream of TaxiEntries.
+ * Interface for providers which yield a stream of TaxiEntries.
  */
 public interface TaxiEntryProvider {
 
