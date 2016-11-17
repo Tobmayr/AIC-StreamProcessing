@@ -1,18 +1,30 @@
 package at.ac.tuwien.aic.streamprocessing.storm.bolt;
 
+import org.apache.storm.shade.org.joda.time.DateTime;
+import org.apache.storm.shade.org.joda.time.Duration;
+import org.apache.storm.shade.org.joda.time.format.DateTimeFormat;
+import org.apache.storm.shade.org.joda.time.format.DateTimeFormatter;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 
 import java.util.Map;
 
-import static java.util.Arrays.asList;
+import static at.ac.tuwien.aic.streamprocessing.storm.bolt.Haversine.haversine;
 
 public class CalculateSpeedBolt extends BaseRichBolt {
-    
+
+    /**
+     * The _Calculate speed_ operator calculates the speed between two successive locations for each taxi, whereas the
+     * distance between two locations can be derived by the Haversine formula{4}. This operator represents a stateful
+     * operator because it is required to always remember the last location of the taxi to calculate the current
+     * speed[1]
+     */
+
     private OutputCollector collector;
 
     @Override
@@ -27,14 +39,29 @@ public class CalculateSpeedBolt extends BaseRichBolt {
         Double latitude = input.getDoubleByField("latitude");
         Double longitude = input.getDoubleByField("longitude");
 
-        Double speed = 0.0;
+        // TODO get last position instead of current
+        String lastTimestamp = "2008-02-02 13:37:00";
+        Double lastLatitude = 116.44925;
+        Double lastLongitude = 39.97968;
 
-        if(id != null && timestamp != null && latitude !=null && longitude !=null) {
-            //TODO calculate speed
-            collector.emit(asList(id, speed));
+        Double speed;// in kmh
+        Double distance; // in km
+        Double time; // in hours
+
+        if (id != null && timestamp != null && latitude != null && longitude != null) {
+            distance = haversine(lastLatitude, lastLongitude, latitude, longitude);
+            time = time(lastTimestamp, timestamp);
+            speed = distance / time;
+
+            collector.emit(new Values(id, speed));
         }
+    }
 
-
+    private Double time(String startTimestamp, String endTimestamp) {
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        DateTime startTime = fmt.parseDateTime(startTimestamp);
+        DateTime endTime = fmt.parseDateTime(endTimestamp);
+        return (new Duration(startTime, endTime)).getMillis() / 3600000.0;
     }
 
     @Override

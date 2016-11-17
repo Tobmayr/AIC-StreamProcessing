@@ -5,8 +5,11 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 
 import java.util.Map;
+
+import static at.ac.tuwien.aic.streamprocessing.storm.bolt.Haversine.haversine;
 
 public class CalculateDistanceBolt extends BaseRichBolt {
 
@@ -20,11 +23,16 @@ public class CalculateDistanceBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         Integer id = input.getIntegerByField("id");
-        String timestamp = input.getStringByField("timestamp");
         Double latitude = input.getDoubleByField("latitude");
         Double longitude = input.getDoubleByField("longitude");
 
-        //TODO calculate overall distance for a taxi and store it to redis
+        // TODO get last location from somewhere (sliding window, trident or redis)
+        Double lastLatitude = 0.0;
+        Double lastLongitude = 0.0;
+
+        Double distance = haversine(lastLatitude, lastLongitude, latitude, longitude);
+
+        collector.emit(new Values(id, distance));
     }
 
     @Override
