@@ -40,7 +40,8 @@ public class StreamProcessingTopology {
 
         // create the default config object and set the number of threads to run (similar to setting number of workers in live cluster)
         Config conf = new Config();
-        conf.setDebug(false);
+        conf.put("topology.eventlogger.executors",2);
+        conf.setDebug(true);
         conf.setMaxTaskParallelism(3);
 
 //        if(args[0].equals("cluster")) {

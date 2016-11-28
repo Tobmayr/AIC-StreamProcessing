@@ -1,5 +1,7 @@
 # Advanced Internet Computing Group2 Team1
 
+[Source of this Repository](http://hyde.infosys.tuwien.ac.at/aic2016/G2T1v2/commits/master)
+
 Toolchain
 
 * Language: Java
@@ -46,6 +48,8 @@ Adapted from [Link](http://storm.apache.org/releases/current/Setting-up-a-Storm-
      sleep 5
 ./bin/apache-storm-1.0.2/bin/storm ui &
     sleep 5
+./bin/apache-storm-1.0.2/bin/storm logviewer &
+    sleep 5
 ```
 
 Open [WebInterface on localhost:8080](http://localhost:8080)
@@ -77,3 +81,8 @@ rm -rf /tmp/kafka-logs
 # don't run StormSubmitter from IDEA
 # run ./bin/apache-storm/bin/storm executable to submit the jar
 ```
+
+Resources
+---------
+[SlideShare with good overview](http://www.slideshare.net/qiozas/big-data-streaming-processing-using-apache-storm-fosscomm-2016?next_slideshow=1)
+[Trident Storm Tutorial with Votes](https://chawlasumit.wordpress.com/2015/08/02/how-to-manage-state-in-trident-storm-topologies/)
