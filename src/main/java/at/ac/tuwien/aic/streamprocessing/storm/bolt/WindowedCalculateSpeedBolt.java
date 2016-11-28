@@ -1,5 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.storm.bolt;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
 import org.apache.storm.shade.org.joda.time.DateTime;
 import org.apache.storm.shade.org.joda.time.Duration;
 import org.apache.storm.shade.org.joda.time.format.DateTimeFormat;
@@ -7,16 +8,18 @@ import org.apache.storm.shade.org.joda.time.format.DateTimeFormatter;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
-import org.apache.storm.topology.base.BaseRichBolt;
+import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+import org.apache.storm.windowing.TupleWindow;
 
+import java.util.List;
 import java.util.Map;
 
 import static at.ac.tuwien.aic.streamprocessing.storm.bolt.Haversine.haversine;
 
-public class CalculateSpeedBolt extends BaseRichBolt {
+public class WindowedCalculateSpeedBolt extends BaseWindowedBolt {
 
     /**
      * The _Calculate speed_ operator calculates the speed between two successive locations for each taxi, whereas the
@@ -33,22 +36,25 @@ public class CalculateSpeedBolt extends BaseRichBolt {
     }
 
     @Override
-    public void execute(Tuple input) {
-        Integer id = input.getIntegerByField("id");
-        String timestamp = input.getStringByField("timestamp");
-        Double latitude = input.getDoubleByField("latitude");
-        Double longitude = input.getDoubleByField("longitude");
+    public void execute(TupleWindow tw) {
+        List<Tuple> tuples = tw.get();
+        if (tuples.size() != 2 ) {return;}
+        Tuple t1 = tuples.get(0);
+        Tuple t2 = tuples.get(1);
 
-        // TODO get last position instead of current
-        String lastTimestamp = "2008-02-02 13:37:00";
-        Double lastLatitude = 116.44925;
-        Double lastLongitude = 39.97968;
+
+        Integer id = t1.getIntegerByField("id");
+        String timestamp = t1.getStringByField("timestamp");
+        Double latitude = t1.getDoubleByField("latitude");
+        Double longitude = t1.getDoubleByField("longitude");
+
+        String lastTimestamp = t2.getStringByField("timestamp");
+        Double lastLatitude = t2.getDoubleByField("latitude");
+        Double lastLongitude = t2.getDoubleByField("longitude");
 
         Double speed = speed(timestamp, latitude, longitude, lastTimestamp, lastLatitude, lastLongitude);
 
-        if (speed != null) {
-            collector.emit(new Values(id, speed));
-        }
+        collector.emit(new Values(id, speed));
     }
 
     static Double speed(String timestamp, Double latitude, Double longitude, String lastTimestamp, Double lastLatitude, Double lastLongitude) {
@@ -68,8 +74,10 @@ public class CalculateSpeedBolt extends BaseRichBolt {
         DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
         DateTime startTime = fmt.parseDateTime(startTimestamp);
         DateTime endTime = fmt.parseDateTime(endTimestamp);
-        return (new Duration(startTime, endTime)).getMillis() / 3600000.0;
+        return (new org.apache.storm.shade.org.joda.time.Duration(startTime, endTime)).getMillis() / 3600000.0;
     }
+
+
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

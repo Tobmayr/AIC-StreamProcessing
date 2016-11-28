@@ -1,12 +1,12 @@
 package at.ac.tuwien.aic.streamprocessing.storm.spout;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
-import org.apache.kafka.common.utils.Utils;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
+import org.apache.storm.utils.Time;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +49,11 @@ public class TestTaxiDataSpout extends BaseRichSpout {
 
     @Override
     public void nextTuple() {
-        Utils.sleep(100);
+        try {
+            Time.sleep(100);
+        } catch (InterruptedException e) {
+            //e.printStackTrace();
+        }
         TaxiEntry taxiEntry = taxiData[random.nextInt(taxiData.length)];
 
         //simulate time change from 0 to 10 minutes
