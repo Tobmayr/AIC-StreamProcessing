@@ -41,7 +41,7 @@ Adapted from [Link](http://storm.apache.org/releases/current/Setting-up-a-Storm-
     sleep 5
 ./bin/kafka_2.11-0.10.1.0/bin/kafka-server-start.sh ./conf/server.properties &
     sleep 5
-./bin/kafka_2.11-0.10.1.0/ kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
 ./bin/apache-storm-1.0.2/bin/storm nimbus & 
     sleep 5
 ./bin/apache-storm-1.0.2/bin/storm supervisor & 
@@ -61,7 +61,7 @@ Submitting the Topology to the cluster
 ./bin/apache-storm-1.0.2/bin/storm jar build/libs/stream-processing-0.1-SNAPSHOT.jar at.ac.tuwien.aic.streamprocessing.storm.StreamProcessingTopology TestName
 
 # monitor a single component
-./bin/apache-storm-1.0.2/bin/storm monitor taxicab-0_0_1 -m w-calculate-speed-bolt^
+./bin/apache-storm-1.0.2/bin/storm monitor taxicab-0_0_1 -m w-calculate-speed-bolt
 
 ./bin/apache-storm-1.0.2/bin/storm kill taxicab-0_0_1
 # ^^^ will wait for topology.message.timeout.secs (30s) to allow finish processing
