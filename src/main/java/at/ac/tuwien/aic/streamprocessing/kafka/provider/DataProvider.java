@@ -7,6 +7,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -18,9 +20,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 /**
- * Data Provider
+ * Data Provider provides data to Kafka (i.e. TaxiEntry objects) by parsing a CSV file containing sorted entries by timestamp
  */
 public class DataProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataProvider.class);
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int KAFKA_PORT = 9092;
@@ -40,10 +44,6 @@ public class DataProvider {
         int timeFactor = Integer.parseInt(args[2]);
 
         Properties producerProperties = createProducerProperties();
-
-        LocalDateTime referenceDateTime = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
-        LocalDateTime rowDateTime = null;
-
         Producer<Integer, byte[]> producer = new KafkaProducer<>(producerProperties);
 
         try
@@ -51,33 +51,39 @@ public class DataProvider {
             Reader in = new FileReader(filePath);
             Iterable<CSVRecord> csvLines = CSVFormat.EXCEL.parse(in);
 
+            LocalDateTime referenceDateTime = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+            LocalDateTime rowDateTime = null;
+
+            int counter = 0;
             for (CSVRecord csvLine : csvLines) {
                 rowDateTime = LocalDateTime.parse(csvLine.get(1), formatter);
-
                 if(referenceDateTime.equals(rowDateTime)){
                     TaxiEntry entry = new TaxiEntry(Integer.parseInt(csvLine.get(0)), LocalDateTime.parse(csvLine.get(1), formatter), Double.parseDouble(csvLine.get(2)), Double.parseDouble(csvLine.get(3)));
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
-                    System.out.println("Sending :" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
+                    logger.info("Sending :" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
                     producer.send(record);
+                    counter++;
                 } else {
                     Duration timeDiff = Duration.between(referenceDateTime, rowDateTime);
-                    System.out.println("Sleeeping.... ");
+                    logger.info("Sleeping.... ");
                     Thread.sleep(Math.round(timeDiff.getSeconds()/timeFactor));
 
                     TaxiEntry entry = new TaxiEntry(Integer.parseInt(csvLine.get(0)), LocalDateTime.parse(csvLine.get(1), formatter), Double.parseDouble(csvLine.get(2)), Double.parseDouble(csvLine.get(3)));
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
-                    System.out.println("Sending:" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
+                    logger.info("Sending:" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
                     producer.send(record);
+                    counter++;
 
                     referenceDateTime = rowDateTime;
                 }
             }
+            logger.info("Submitted " + counter + " entries");
         } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
+            logger.error("File with the given path could not be found! " +  e1.toString());
         } catch (IOException e1) {
-            e1.printStackTrace();
+            logger.error("Filed reading the file! " +  e1.toString());
         } finally {
             producer.close();
         }
