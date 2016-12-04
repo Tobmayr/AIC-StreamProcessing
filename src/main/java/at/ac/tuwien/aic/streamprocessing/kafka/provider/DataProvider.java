@@ -28,17 +28,20 @@ public class DataProvider {
 
 
     public static void main(String[] args) throws Exception{
-        if(args.length < 2){
-            System.out.println("USAGE: <absolute-path-of-input-data> <topic-name>");
+        if(args.length < 3){
+            System.out.println("USAGE: <absolute-path-of-input-data> <topic-name> <time-factor-to-divide-seconds>");
             return;
+        } else if(Integer.parseInt(args[2]) <= 0){
+            System.out.println("Time factor should be a positive number");
         }
 
         String filePath = args[0].toString();
         String topicName = args[1].toString();
+        int timeFactor = Integer.parseInt(args[2]);
 
         Properties producerProperties = createProducerProperties();
 
-        LocalDateTime referenceDateTime = LocalDateTime.parse("2002-02-02 13:30:45", formatter);
+        LocalDateTime referenceDateTime = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
         LocalDateTime rowDateTime = null;
 
         Producer<Integer, byte[]> producer = new KafkaProducer<>(producerProperties);
@@ -60,13 +63,12 @@ public class DataProvider {
                 } else {
                     Duration timeDiff = Duration.between(referenceDateTime, rowDateTime);
                     System.out.println("Sleeeping.... ");
-                    Thread.sleep(1000);
+                    Thread.sleep(Math.round(timeDiff.getSeconds()/timeFactor));
 
                     TaxiEntry entry = new TaxiEntry(Integer.parseInt(csvLine.get(0)), LocalDateTime.parse(csvLine.get(1), formatter), Double.parseDouble(csvLine.get(2)), Double.parseDouble(csvLine.get(3)));
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
                     System.out.println("Sending:" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
-                    System.out.println("Minute diff:" + timeDiff.getSeconds()/60);
                     producer.send(record);
 
                     referenceDateTime = rowDateTime;
