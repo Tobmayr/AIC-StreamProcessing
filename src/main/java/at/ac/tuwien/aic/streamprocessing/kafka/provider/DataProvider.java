@@ -58,7 +58,7 @@ public class DataProvider {
             for (CSVRecord csvLine : csvLines) {
                 rowDateTime = LocalDateTime.parse(csvLine.get(1), formatter);
                 if(referenceDateTime.equals(rowDateTime)){
-                    TaxiEntry entry = new TaxiEntry(Integer.parseInt(csvLine.get(0)), LocalDateTime.parse(csvLine.get(1), formatter), Double.parseDouble(csvLine.get(2)), Double.parseDouble(csvLine.get(3)));
+                    TaxiEntry entry = parseCsvRecord(csvLine);
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
                     logger.info("Sending :" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
@@ -69,7 +69,7 @@ public class DataProvider {
                     logger.info("Sleeping.... ");
                     Thread.sleep(Math.round(timeDiff.getSeconds()/timeFactor));
 
-                    TaxiEntry entry = new TaxiEntry(Integer.parseInt(csvLine.get(0)), LocalDateTime.parse(csvLine.get(1), formatter), Double.parseDouble(csvLine.get(2)), Double.parseDouble(csvLine.get(3)));
+                    TaxiEntry entry = parseCsvRecord(csvLine);
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
                     logger.info("Sending:" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
@@ -86,6 +86,20 @@ public class DataProvider {
             logger.error("Filed reading the file! " +  e1.toString());
         } finally {
             producer.close();
+        }
+    }
+
+    private static TaxiEntry parseCsvRecord(CSVRecord record) {
+        try {
+            Integer taxiId = Integer.parseInt(record.get(0));
+            LocalDateTime timestamp = LocalDateTime.parse(record.get(1), formatter);
+            double latitude = Double.parseDouble(record.get(2));
+            double longitude = Double.parseDouble(record.get(3));
+
+            return new TaxiEntry(taxiId, timestamp, latitude, longitude);
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse record '" + record.toString() + "'");
+            return null;
         }
     }
 
