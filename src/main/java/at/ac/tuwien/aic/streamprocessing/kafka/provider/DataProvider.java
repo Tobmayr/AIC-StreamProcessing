@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -24,36 +25,28 @@ import java.util.Properties;
  * Data Provider provides data to Kafka (i.e. TaxiEntry objects) by parsing a CSV file containing sorted entries by timestamp
  */
 public class DataProvider {
-
     private static final Logger logger = LoggerFactory.getLogger(DataProvider.class);
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final LocalDateTime REFERENCE_START_TIME = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+
     private static final int KAFKA_PORT = 9092;
     private static final String KAFKA_URI = "localhost:" + KAFKA_PORT;
 
-    private static final LocalDateTime REFERENCE_START_TIME = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+    private String topic;
+    private int speedFactor;
 
+    public DataProvider(String topic, int speedFactor) {
+        this.speedFactor = speedFactor;
+        this.topic = topic;
+    }
 
-    public static void main(String[] args) throws Exception {
-        if (args.length < 3) {
-            System.out.println("USAGE: <absolute-path-of-input-data> <topic-name> <time-factor-to-divide-seconds>");
-            return;
-        }
-
-        String filePath = args[0];
-        String topicName = args[1];
-        int timeFactor = Integer.parseInt(args[2]);
-
-        if (timeFactor <= 0) {
-            logger.error("Time factor should be a positive number");
-            return;
-        }
-
+    private void provide(Reader reader) {
         Properties producerProperties = createProducerProperties();
-        TaxiEntryKafkaProducer producer = new TaxiEntryKafkaProducer(topicName, producerProperties);
+        TaxiEntryKafkaProducer producer = new TaxiEntryKafkaProducer(topic, producerProperties);
 
         try {
-            CSVParser csv = CSVFormat.EXCEL.parse(new FileReader(filePath));
+            CSVParser csv = CSVFormat.EXCEL.parse(reader);
 
             LocalDateTime currentBatchStart = REFERENCE_START_TIME;
             LocalDateTime nextBatchStart;
@@ -75,19 +68,21 @@ public class DataProvider {
                     last = batch.last;
 
                     // simulate waiting for next entry
-                    Time.sleep((seconds * 1000) / timeFactor);
+                    try {
+                        Time.sleep((seconds * 1000) / speedFactor);
+                    } catch (InterruptedException e) {
+
+                    }
                 }
             }
-        } catch (FileNotFoundException e1) {
-            logger.error("File with the given path could not be found!", e1);
-        } catch (IOException e1) {
-            logger.error("Filed reading the file!", e1);
+        } catch (IOException e) {
+            logger.error("Filed reading the file!", e);
         } finally {
             producer.close();
         }
     }
 
-    private static Batch getNextBatch(Iterator<CSVRecord> recordIterator, TaxiEntry startEntry, LocalDateTime until) {
+    private Batch getNextBatch(Iterator<CSVRecord> recordIterator, TaxiEntry startEntry, LocalDateTime until) {
         List<TaxiEntry> entries = new ArrayList<>();
 
         if (startEntry != null) {
@@ -114,7 +109,7 @@ public class DataProvider {
         return new Batch(entries, null);
     }
 
-    private static TaxiEntry parseCsvRecord(CSVRecord record) {
+    private TaxiEntry parseCsvRecord(CSVRecord record) {
         try {
             Integer taxiId = Integer.parseInt(record.get(0));
             LocalDateTime timestamp = LocalDateTime.parse(record.get(1), formatter);
@@ -128,7 +123,7 @@ public class DataProvider {
         }
     }
 
-    private static Properties createProducerProperties(){
+    private Properties createProducerProperties(){
         Properties producerProperties = new Properties();
         producerProperties.put("bootstrap.servers", KAFKA_URI);
         producerProperties.put("acks", "1");
@@ -144,6 +139,32 @@ public class DataProvider {
         Batch(List<TaxiEntry> entries, TaxiEntry last) {
             this.entries = entries;
             this.last = last;
+        }
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        if (args.length < 3) {
+            System.out.println("USAGE: <absolute-path-of-input-data> <topic-name> <speed-factor-to-divide-seconds>");
+            return;
+        }
+
+        String filePath = args[0];
+        String topic = args[1];
+        int speedFactor = Integer.parseInt(args[2]);
+
+        if (speedFactor <= 0) {
+            logger.error("Speed factor should be a positive number");
+            return;
+        }
+
+        try {
+            Reader reader = new FileReader(filePath);
+
+            DataProvider provider = new DataProvider(topic, speedFactor);
+            provider.provide(reader);
+        } catch (FileNotFoundException e1) {
+            logger.error("File with the given path could not be found!", e1);
         }
     }
 }
