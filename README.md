@@ -29,6 +29,11 @@ curl http://www-eu.apache.org/dist/storm/apache-storm-1.0.2/apache-storm-1.0.2.t
 cd ..
 
 # ./gradlew test --stacktrace ## tests do not work right now
+
+# redis
+sudo apt-get install redis-server
+# or get it from https://redis.io/
+
 ```
 
 Setting up a Storm Cluster
@@ -67,7 +72,7 @@ Submitting the Topology to the cluster
 # ^^^ will wait for topology.message.timeout.secs (30s) to allow finish processing
 ```
 
-Fixing a broken Cluster
+Fixes
 -----------------------
 
 ```
@@ -81,6 +86,9 @@ rm -rf /tmp/kafka-logs
 # don't run StormSubmitter from IDEA
 # run ./bin/apache-storm/bin/storm executable to submit the jar
 ```
+
+Die `NoSuchElementException` kommt wenn man zuwenige `Values` aus einem `Operator` emitted als in der Topologie gefordert.
+
 
 Resources
 ---------
