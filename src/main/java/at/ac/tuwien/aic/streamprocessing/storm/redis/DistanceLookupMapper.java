@@ -10,24 +10,24 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.ITuple;
 import org.apache.storm.tuple.Values;
 
-public class AverageSpeedLookupMapper implements RedisLookupMapper {
-    private RedisDataTypeDescription description;
-    private final String hashKey = "taxiID_avgSpeed";
-    private static final String ID_POSTFIX = "_avgSpeed";
+public class DistanceLookupMapper implements RedisLookupMapper {
 
-    public AverageSpeedLookupMapper() {
+    private RedisDataTypeDescription description;
+    private final String hashKey = "taxiID_dist";
+    private static final String ID_POSTFIX = "_dist";
+
+    public DistanceLookupMapper() {
         description = new RedisDataTypeDescription(RedisDataTypeDescription.RedisDataType.HASH, hashKey);
     }
 
     @Override
     public String getKeyFromTuple(ITuple tuple) {
         return tuple.getIntegerByField("id") + ID_POSTFIX;
-
     }
 
     @Override
     public String getValueFromTuple(ITuple tuple) {
-        return "" + tuple.getDoubleByField("avgSpeed");
+        return "" + tuple.getDoubleByField("distance");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class AverageSpeedLookupMapper implements RedisLookupMapper {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("id", "avgSpeed"));
+        declarer.declare(new Fields("id", "distance"));
 
     }
 
