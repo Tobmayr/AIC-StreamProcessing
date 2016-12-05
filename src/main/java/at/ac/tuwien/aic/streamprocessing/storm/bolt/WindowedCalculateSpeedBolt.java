@@ -48,9 +48,12 @@ public class WindowedCalculateSpeedBolt extends BaseWindowedBolt {
         Double latitude = t1.getDoubleByField("latitude");
         Double longitude = t1.getDoubleByField("longitude");
 
+        Integer lastId = t1.getIntegerByField("id");
         String lastTimestamp = t2.getStringByField("timestamp");
         Double lastLatitude = t2.getDoubleByField("latitude");
         Double lastLongitude = t2.getDoubleByField("longitude");
+
+        if (lastId != id) { collector.emit(new Values("Wrong id",id,lastId)); }
 
         Double speed = speed(timestamp, latitude, longitude, lastTimestamp, lastLatitude, lastLongitude);
 
