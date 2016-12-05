@@ -1,22 +1,23 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
+import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
-import at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntrySerializer;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.storm.utils.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -33,62 +34,84 @@ public class DataProvider {
     private static final LocalDateTime REFERENCE_START_TIME = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
 
 
-    public static void main(String[] args) throws Exception{
-        if(args.length < 3){
+    public static void main(String[] args) throws Exception {
+        if (args.length < 3) {
             System.out.println("USAGE: <absolute-path-of-input-data> <topic-name> <time-factor-to-divide-seconds>");
             return;
-        } else if(Integer.parseInt(args[2]) <= 0){
-            System.out.println("Time factor should be a positive number");
         }
 
         String filePath = args[0];
         String topicName = args[1];
         int timeFactor = Integer.parseInt(args[2]);
 
+        if (timeFactor <= 0) {
+            logger.error("Time factor should be a positive number");
+            return;
+        }
+
         Properties producerProperties = createProducerProperties();
-        Producer<Integer, byte[]> producer = new KafkaProducer<>(producerProperties);
+        TaxiEntryKafkaProducer producer = new TaxiEntryKafkaProducer(topicName, producerProperties);
 
-        try
-        {
-            Reader in = new FileReader(filePath);
-            Iterable<CSVRecord> csvLines = CSVFormat.EXCEL.parse(in);
+        try {
+            CSVParser csv = CSVFormat.EXCEL.parse(new FileReader(filePath));
 
-            LocalDateTime current = REFERENCE_START_TIME;
-            LocalDateTime rowDateTime = null;
+            LocalDateTime currentBatchStart = REFERENCE_START_TIME;
+            LocalDateTime nextBatchStart;
+            TaxiEntry last = null;
 
-            int counter = 0;
-            for (CSVRecord csvLine : csvLines) {
-                rowDateTime = LocalDateTime.parse(csvLine.get(1), formatter);
-                if(current.equals(rowDateTime)){
-                    TaxiEntry entry = parseCsvRecord(csvLine);
-                    byte[] serialized = TaxiEntrySerializer.serialize(entry);
-                    ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
-                    logger.info("Sending :" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
-                    producer.send(record);
-                    counter++;
-                } else {
-                    Duration timeDiff = Duration.between(current, rowDateTime);
-                    logger.info("Sleeping.... ");
-                    Thread.sleep(Math.round(timeDiff.getSeconds()/timeFactor));
+            Iterator<CSVRecord> recordIterator = csv.iterator();
 
-                    TaxiEntry entry = parseCsvRecord(csvLine);
-                    byte[] serialized = TaxiEntrySerializer.serialize(entry);
-                    ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
-                    logger.info("Sending:" + csvLine.get(0) + "," +  csvLine.get(1) + "," +  csvLine.get(2) + "," +  csvLine.get(3));
-                    producer.send(record);
-                    counter++;
+            while (recordIterator.hasNext()) {
+                Batch batch = getNextBatch(recordIterator, last, currentBatchStart);
+                producer.produce(batch.entries::stream);
 
-                    current = rowDateTime;
+                if (batch.last != null) {
+                    nextBatchStart = batch.last.getTimestamp();
+
+                    // compute wait time between now and next entry
+                    long seconds = ChronoUnit.SECONDS.between(currentBatchStart, nextBatchStart);
+
+                    currentBatchStart = nextBatchStart;
+                    last = batch.last;
+
+                    // simulate waiting for next entry
+                    Time.sleep((seconds * 1000) / timeFactor);
                 }
             }
-            logger.info("Submitted " + counter + " entries");
         } catch (FileNotFoundException e1) {
-            logger.error("File with the given path could not be found! " +  e1.toString());
+            logger.error("File with the given path could not be found!", e1);
         } catch (IOException e1) {
-            logger.error("Filed reading the file! " +  e1.toString());
+            logger.error("Filed reading the file!", e1);
         } finally {
             producer.close();
         }
+    }
+
+    private static Batch getNextBatch(Iterator<CSVRecord> recordIterator, TaxiEntry startEntry, LocalDateTime until) {
+        List<TaxiEntry> entries = new ArrayList<>();
+
+        if (startEntry != null) {
+            entries.add(startEntry);
+        }
+
+        while (recordIterator.hasNext()) {
+            CSVRecord record = recordIterator.next();
+            TaxiEntry entry = parseCsvRecord(record);
+
+            if (entry == null) {
+                // malformed record, ignore
+                continue;
+            }
+
+            if (entry.getTimestamp().isAfter(until)) {
+                // found end of current batch
+                return new Batch(entries, entry);
+            }
+
+            entries.add(entry);
+        }
+
+        return new Batch(entries, null);
     }
 
     private static TaxiEntry parseCsvRecord(CSVRecord record) {
@@ -112,5 +135,15 @@ public class DataProvider {
         producerProperties.put("key.serializer", "org.apache.kafka.common.serialization.IntegerSerializer");
         producerProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         return producerProperties;
+    }
+
+    private static class Batch {
+        List<TaxiEntry> entries;
+        TaxiEntry last;
+
+        Batch(List<TaxiEntry> entries, TaxiEntry last) {
+            this.entries = entries;
+            this.last = last;
+        }
     }
 }
