@@ -1,51 +1,56 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiDataSpout;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiFixedDataSpout;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.RedisFunction;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
-import org.apache.storm.trident.TridentState;
+import org.apache.storm.generated.StormTopology;
+import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentTopology;
-import org.apache.storm.trident.operation.Consumer;
-import org.apache.storm.trident.operation.builtin.Count;
-import org.apache.storm.trident.testing.MemoryMapState;
-import org.apache.storm.trident.tuple.TridentTuple;
+import org.apache.storm.trident.operation.builtin.Debug;
 import org.apache.storm.tuple.Fields;
 
 public class TridentProcessingTopology {
 
-    public static void main(String[] args) throws Exception {
+    public static StormTopology buildTopology() {
+        Fields taxiFields = new Fields("id", "timestamp", "latitude", "longitude");
+        Fields taxiFieldsWithSpeed = new Fields("id", "timestamp", "latitude", "longitude","speed");
+        Fields taxiFieldsWithAvgSpeed = new Fields("id", "timestamp", "latitude", "longitude","speed","avgSpeed");
+        Fields taxiFieldsWithDistance = new Fields("id", "timestamp", "latitude", "longitude","distance");
 
         TridentTopology topology = new TridentTopology();
+        TestTaxiFixedDataSpout spout = new TestTaxiFixedDataSpout();
+        Stream inputStream = topology.newStream("taxi", spout);
 
-        Fields id = new Fields("id");
-        Fields speed = new Fields("speed");
+        inputStream
+                .partitionAggregate(taxiFields, new CalculateSpeed(), taxiFieldsWithSpeed)
+                .toStream()
+                .each(taxiFieldsWithSpeed, new Debug("speed"))
+                .partitionAggregate(taxiFieldsWithSpeed, new CalculateAverageSpeed(), taxiFieldsWithAvgSpeed)
+                .toStream()
+                .each(taxiFieldsWithSpeed, new Debug("avgSpeed"))
+                .each(taxiFieldsWithSpeed, new RedisFunction());
 
-        TridentState distance = topology.newStream("taxis", new TestTaxiDataSpout())
-                .peek(new Consumer() {
-                    @Override
-                    public void accept(TridentTuple input) {
-                        System.out.println("XXXXX " + input.toString());
-                    }
-                })
-                .groupBy(id)
-                .persistentAggregate(new MemoryMapState.Factory(), new Count(), speed); //CalculateSpeed
+        inputStream
+                .partitionAggregate(taxiFields, new CalculateDistance(), taxiFieldsWithDistance)
+                .toStream()
+                .each(taxiFieldsWithDistance, new Debug("distance"))
+                .each(taxiFieldsWithDistance, new RedisFunction());
 
-        topology.newStream("taxis-distance", new TestTaxiDataSpout())
-                //.stateQuery(distance, new Fields("id"),new MapGet(),new Fields("speed"))
-                .peek(new Consumer() {
-                    @Override
-                    public void accept(TridentTuple input) {
-                        System.out.println("YYYYY" + input.getString(1));
-                    }
-                });
+        return topology.build();
+    }
 
-
+    public static void main(String[] args) throws Exception {
+        // this method is for testing only
         Config conf = new Config();
         conf.setDebug(false);
-        conf.setMaxTaskParallelism(3);
+        conf.setMaxTaskParallelism(1);
 
         LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("stream-processing", conf, topology.build());
+        cluster.submitTopology("stream-processing", conf, buildTopology());
 
         Thread.sleep(20000);
 
