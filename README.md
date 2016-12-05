@@ -90,6 +90,35 @@ rm -rf /tmp/kafka-logs
 Die `NoSuchElementException` kommt wenn man zuwenige `Values` aus einem `Operator` emitted als in der Topologie gefordert.
 
 
+
+Testdata
+--------------------------
+
+The testdata (merged, sorted) can be downloaded through [this link] (https://drive.google.com/uc?export=download&confirm=ha6G&id=0B5_xoVJ9kw95QkNESFM0OHM2RlE) OR [this link](https://dl.dropboxusercontent.com/u/51193440/test_data_merged_sorted.zip).    (The original source of sample data can be found in Microsoft website [here](https://www.microsoft.com/en-us/research/publication/t-drive-trajectory-data-sample/))
+
+```
+The workflow how the original test-data has been merged and sorted
+
+# 0. Install sqlite3
+sudo apt install sqlite3
+
+# 1. Navigate to downloaded and extracted original test-data and merge them
+copy /b *.txt testData_merged_unsorted.csv
+
+# 2. Import test-data into sqlite 
+sqlite3 taxiData < script.sqlite
+
+#where script.sqlite contains:
+create table taxiData(id integer, timestamp datetime, lat decimal, long decimal);
+.mode csv
+.import 'testData_merged_unsorted.csv' TaxiData.db
+
+# 3. Output query to file
+sqlite3.exe -csv taxiData "SELECT * FROM taxiData ORDER BY 2" > testData_merged_sorted.csv
+
+
+```
+
 Resources
 ---------
 [SlideShare with good overview](http://www.slideshare.net/qiozas/big-data-streaming-processing-using-apache-storm-fosscomm-2016?next_slideshow=1)
