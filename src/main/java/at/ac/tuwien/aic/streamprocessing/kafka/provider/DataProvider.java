@@ -39,8 +39,8 @@ public class DataProvider {
             System.out.println("Time factor should be a positive number");
         }
 
-        String filePath = args[0].toString();
-        String topicName = args[1].toString();
+        String filePath = args[0];
+        String topicName = args[1];
         int timeFactor = Integer.parseInt(args[2]);
 
         Properties producerProperties = createProducerProperties();
