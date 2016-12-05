@@ -30,6 +30,8 @@ public class DataProvider {
     private static final int KAFKA_PORT = 9092;
     private static final String KAFKA_URI = "localhost:" + KAFKA_PORT;
 
+    private static final LocalDateTime REFERENCE_START_TIME = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+
 
     public static void main(String[] args) throws Exception{
         if(args.length < 3){
@@ -51,13 +53,13 @@ public class DataProvider {
             Reader in = new FileReader(filePath);
             Iterable<CSVRecord> csvLines = CSVFormat.EXCEL.parse(in);
 
-            LocalDateTime referenceDateTime = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+            LocalDateTime current = REFERENCE_START_TIME;
             LocalDateTime rowDateTime = null;
 
             int counter = 0;
             for (CSVRecord csvLine : csvLines) {
                 rowDateTime = LocalDateTime.parse(csvLine.get(1), formatter);
-                if(referenceDateTime.equals(rowDateTime)){
+                if(current.equals(rowDateTime)){
                     TaxiEntry entry = parseCsvRecord(csvLine);
                     byte[] serialized = TaxiEntrySerializer.serialize(entry);
                     ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topicName, entry.getTaxiId(), serialized);
@@ -65,7 +67,7 @@ public class DataProvider {
                     producer.send(record);
                     counter++;
                 } else {
-                    Duration timeDiff = Duration.between(referenceDateTime, rowDateTime);
+                    Duration timeDiff = Duration.between(current, rowDateTime);
                     logger.info("Sleeping.... ");
                     Thread.sleep(Math.round(timeDiff.getSeconds()/timeFactor));
 
@@ -76,7 +78,7 @@ public class DataProvider {
                     producer.send(record);
                     counter++;
 
-                    referenceDateTime = rowDateTime;
+                    current = rowDateTime;
                 }
             }
             logger.info("Submitted " + counter + " entries");
