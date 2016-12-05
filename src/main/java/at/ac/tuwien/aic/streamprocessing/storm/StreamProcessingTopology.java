@@ -3,10 +3,10 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 import at.ac.tuwien.aic.streamprocessing.storm.bolt.CalculateAverageSpeedBolt;
 import at.ac.tuwien.aic.streamprocessing.storm.bolt.CalculateDistanceBolt;
 import at.ac.tuwien.aic.streamprocessing.storm.bolt.WindowedCalculateSpeedBolt;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiDataSpout;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.KafkaDataSpout;
 import org.apache.storm.Config;
-import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.kafka.ZkHosts;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.tuple.Fields;
@@ -22,21 +22,24 @@ public class StreamProcessingTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        // attach the test taxi data spout to the topology - no parallelism
+        ZkHosts hosts = new ZkHosts("localhost:2181", "");
+
+        // attach the kafka data spout to the topology - no parallelism
         // NOTE: this is just to make sure we keep the data ordered. The kafka spout should have parallelism.
         //       we will probably need the trident framework inorder to achieve this.
-        builder.setSpout("test-taxi-data-spout", new TestTaxiDataSpout(), 1);
+        KafkaDataSpout spout = KafkaDataSpout.create(hosts, "test");
+        builder.setSpout("kafka-spout", spout, 1);
 
         // attach the calculate speed bolt using fields grouping - parallelism of 15
         //builder.setBolt("calculate-speed-bolt", new CalculateSpeedBolt(), 15).fieldsGrouping("test-taxi-data-spout", new Fields("id"));
         builder.setBolt("w-calculate-speed-bolt", new WindowedCalculateSpeedBolt().withWindow(new BaseWindowedBolt.Count(2)), 15)
-                .fieldsGrouping("test-taxi-data-spout", new Fields("id"));
+                .fieldsGrouping("kafka-spout", new Fields("id"));
 
         // attach the calculate average speed bolt using fields grouping - parallelism of 15
         builder.setBolt("calculate-average-speed-bolt", new CalculateAverageSpeedBolt(), 15).fieldsGrouping("w-calculate-speed-bolt", new Fields("id"));
 
         // attach the calculate distance bolt using fields grouping - parallelism of 15
-        builder.setBolt("calculate-distance", new CalculateDistanceBolt(), 15).fieldsGrouping("test-taxi-data-spout", new Fields("id"));
+        builder.setBolt("calculate-distance", new CalculateDistanceBolt(), 15).fieldsGrouping("kafka-spout", new Fields("id"));
 
         // create the default config object and set the number of threads to run (similar to setting number of workers in live cluster)
         Config conf = new Config();
