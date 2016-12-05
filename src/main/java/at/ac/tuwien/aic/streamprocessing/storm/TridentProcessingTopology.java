@@ -45,8 +45,7 @@ public class TridentProcessingTopology {
                 .partitionPersist(factory, taxiFieldsWithAvgSpeed, new RedisStateUpdater(averageSpeedStore).withExpire(86400000), new Fields());
 
         inputStream.partitionAggregate(taxiFields, new CalculateDistance(), taxiFieldsWithDistance).toStream()
-                .each(taxiFieldsWithDistance, new Debug("distance"))
-                .partitionPersist(factory, taxiFieldsWithDistance, new RedisStateUpdater(distanceStore).withExpire(86400000), new Fields());
+                .each(taxiFieldsWithDistance, new Debug("distance"));
 
         return topology.build();
     }
