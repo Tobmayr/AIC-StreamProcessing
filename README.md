@@ -117,6 +117,18 @@ create table taxiData(id integer, timestamp datetime, lat decimal, long decimal)
 # 3. Output query to file
 sqlite3.exe -csv taxiData "SELECT * FROM taxiData ORDER BY 2" > testData_merged_sorted.csv
 ```
+Redis Deskop Managaer
+---------
+Simple UI Tool for managing redis instances.
+```
+wget https://github.com/uglide/RedisDesktopManager/releases/download/0.8.3/redis-desktop-manager_0.8.3-120_amd64.deb
+sudo dpkg -i redis-desktop-manager_0.8.3-120_amd64.deb
+#In case of dependcy errors while running above
+sudo apt-get -f install
+
+#Start tool with
+redis-desktop-manager
+```
 
 Resources
 ---------
