@@ -121,7 +121,7 @@ Redis Deskop Managaer
 ---------
 Simple UI tool for managing redis instances.
 ```
-wget https://github.com/uglide/RedisDesktopManager/releases/download/0.8.3/redis-desktop-manager_0.8.3-120_amd64.deb
+wget https://github.com/uglide/RedisDesktopManager/releases/download/0.9.0-alpha2/redis-desktop-manager_0.9.0.26_amd64.deb
 sudo dpkg -i redis-desktop-manager_0.8.3-120_amd64.deb
 
 #in case of dependcy errors while running above
