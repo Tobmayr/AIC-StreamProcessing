@@ -4,6 +4,7 @@ import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.redis.AverageSpeedStoreMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.redis.DistanceStoreMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.KafkaDataSpout;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiFixedDataSpout;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
@@ -21,6 +22,7 @@ import org.apache.storm.redis.common.config.JedisPoolConfig;
 import org.apache.storm.redis.trident.state.RedisState;
 import org.apache.storm.redis.trident.state.RedisStateQuerier;
 import org.apache.storm.redis.trident.state.RedisStateUpdater;
+import org.apache.storm.spout.SchemeAsMultiScheme;
 import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
@@ -41,6 +43,7 @@ public class TridentProcessingTopology {
         TridentTopology topology = new TridentTopology();
         ZkHosts zkHosts = new ZkHosts(zkConnect);
         TridentKafkaConfig spoutConf = new TridentKafkaConfig(zkHosts, "taxi");
+        spoutConf.scheme = new SchemeAsMultiScheme(new TaxiEntryScheme());
         OpaqueTridentKafkaSpout spout = new OpaqueTridentKafkaSpout(spoutConf);
 
         Stream inputStream = topology.newStream("kafka-spout", spout);
