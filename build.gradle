@@ -10,40 +10,67 @@ sourceCompatibility = 1.8
 repositories {
     mavenCentral()
 }
-configurations {
+/*configurations {
     includedInStormJar
     excludedFromStormJar.extendsFrom includedInStormJar
     compile.extendsFrom excludedFromStormJar
-}
+}*/
 
 dependencies {
-    compile group: 'org.apache.kafka', name: 'kafka_2.11', version: '0.10.1.0'
-    compile group: 'org.apache.kafka', name: 'kafka-clients', version: '0.10.1.0'
-    compile group: 'com.101tec', name: 'zkclient', version: '0.9'
-    compile group: 'org.apache.storm', name: 'storm-redis', version: '1.0.2'
+    compile (group: 'org.apache.kafka', name: 'kafka_2.11', version: '0.10.1.0') {
+        exclude module: "log4j"
+        exclude module: "zookeeper"
+        exclude module: "org.slf4j"
+        exclude module: "slf4j-log4j12"
+        exclude module: "log4j-over-slf4j"
+    }
+    compile (group: 'org.apache.kafka', name: 'kafka-clients', version: '0.10.1.0') {
+        exclude module: "zookeeper"
+        exclude module: "org.slf4j"
+        exclude module: "slf4j-log4j12"
+        exclude module: "log4j-over-slf4j"
+    }
+    compile (group: 'com.101tec', name: 'zkclient', version: '0.9') {
+        exclude module: "log4j-over-slf4j"
+    }
+    compile (group: 'org.apache.storm', name: 'storm-redis', version: '1.0.2') {
+        exclude module: "log4j-over-slf4j"
+    }
     compile group: 'org.apache.commons', name: 'commons-pool2', version: '2.4.2'
     
     compile (group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7') {
         exclude module: "slf4j"
+        exclude module: "log4j-over-slf4j"
     }
     compile (group: 'org.apache.storm', name: 'storm-core', version: '1.0.2') {
         exclude module: "log4j-over-slf4j"
     }
     
 
-    compile group: 'org.apache.storm', name: 'storm-kafka', version: '1.0.2'
+    compile (group: 'org.apache.storm', name: 'storm-kafka', version: '1.0.2') {
+        exclude module: "slf4j-log4j12"
+        exclude module: "log4j-over-slf4j"
+    }
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.4'
+
+    compile (group: 'org.apache.curator', name: 'curator-framework', version: '3.2.0') {
+        exclude module: "log4j-over-slf4j"
+        exclude module: "slf4j-log4j12"
+    }
+    compile (group: 'org.apache.curator', name: 'curator-test', version: '3.2.0') {
+        exclude module: "log4j-over-slf4j"
+        exclude module: "slf4j-log4j12"
+    }
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
-    testCompile group: 'org.apache.curator', name: 'curator-test', version: '3.2.0'
-    testCompile group: 'org.apache.curator', name: 'curator-framework', version: '3.2.0'
+
     testCompile "org.mockito:mockito-core:1.+"
 
-    excludedFromStormJar "org.apache.storm:storm-core:1.0.2"
+    /*excludedFromStormJar "org.apache.storm:storm-core:1.0.2"
     includedInStormJar "org.apache.storm:storm-redis:1.0.2"
     includedInStormJar "org.apache.storm:storm-kafka:1.0.2"
-    includedInStormJar "org.apache.commons:commons-pool2:2.4.2"
+    includedInStormJar "org.apache.commons:commons-pool2:2.4.2"*/
 }
 
 checkstyle {
@@ -53,6 +80,12 @@ checkstyle {
 
 test {
     systemProperties 'logback.configurationFile' : new File(projectDir,'src/test/resources/logback-test.xml').absolutePath
+}
+
+task runDataprovider(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DataProvider"
+    args "/home/kris/projects/uni/aic/data/test_data_merged_sorted/taxi1000.csv", "test", "10"
 }
 
 task stormJar(type: Jar) {
