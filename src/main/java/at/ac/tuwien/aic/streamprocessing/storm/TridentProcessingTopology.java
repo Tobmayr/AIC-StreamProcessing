@@ -1,7 +1,9 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
+import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.redis.AverageSpeedStoreMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.redis.DistanceStoreMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.KafkaDataSpout;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiFixedDataSpout;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
@@ -10,6 +12,9 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.RedisFunction;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
+import org.apache.storm.kafka.ZkHosts;
+import org.apache.storm.kafka.trident.OpaqueTridentKafkaSpout;
+import org.apache.storm.kafka.trident.TridentKafkaConfig;
 import org.apache.storm.redis.common.config.JedisPoolConfig;
 import org.apache.storm.redis.trident.state.RedisState;
 import org.apache.storm.redis.trident.state.RedisStateQuerier;
@@ -24,7 +29,7 @@ public class TridentProcessingTopology {
     private static final String REDIS_HOST = "localhost";
     private static final int REDIS_PORT = 6379;
 
-    public static StormTopology buildTopology() {
+    public static StormTopology buildTopology(String zkConnect) {
         Fields taxiFields = new Fields("id", "timestamp", "latitude", "longitude");
         Fields taxiFieldsWithSpeed = new Fields("id", "timestamp", "latitude", "longitude", "speed");
         Fields taxiFieldsWithAvgSpeed = new Fields("id", "timestamp", "latitude", "longitude", "speed", "avgSpeed");
@@ -37,8 +42,11 @@ public class TridentProcessingTopology {
         RedisState.Factory factory = new RedisState.Factory(poolConfig);
 
         TridentTopology topology = new TridentTopology();
-        TestTaxiFixedDataSpout spout = new TestTaxiFixedDataSpout();
-        Stream inputStream = topology.newStream("taxi", spout);
+        ZkHosts zkHosts = new ZkHosts(zkConnect);
+        TridentKafkaConfig spoutConf = new TridentKafkaConfig(zkHosts, "taxi");
+        OpaqueTridentKafkaSpout spout = new OpaqueTridentKafkaSpout(spoutConf);
+
+        Stream inputStream = topology.newStream("kafka-spout", spout);
         inputStream.partitionAggregate(taxiFields, new CalculateSpeed(), taxiFieldsWithSpeed).toStream().each(taxiFieldsWithSpeed, new Debug("speed"))
                 .partitionAggregate(taxiFieldsWithSpeed, new CalculateAverageSpeed(), taxiFieldsWithAvgSpeed).toStream()
                 .each(taxiFieldsWithSpeed, new Debug("avgSpeed"))
@@ -50,18 +58,31 @@ public class TridentProcessingTopology {
         return topology.build();
     }
 
+    public static LocalKafkaInstance startZookeeperAndKafka(String topic) throws Exception {
+        LocalKafkaInstance kafka = new LocalKafkaInstance(9002, 2000);
+
+        kafka.start();
+        kafka.createTopic(topic);
+
+        return kafka;
+    }
+
     public static void main(String[] args) throws Exception {
         // this method is for testing only
         Config conf = new Config();
         conf.setDebug(false);
         conf.setMaxTaskParallelism(1);
 
+        LocalKafkaInstance kafka = startZookeeperAndKafka("taxi");
+
+
         LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("stream-processing", conf, buildTopology());
+        cluster.submitTopology("stream-processing", conf, buildTopology(kafka.getConnectString()));
 
         Thread.sleep(20000);
 
         cluster.shutdown();
+        kafka.stop();
 
         throw new RuntimeException("Exit Zookeper the Hard way");
     }

@@ -12,7 +12,7 @@ public class KafkaDataSpout extends KafkaSpout {
     }
 
     public static KafkaDataSpout create(ZkHosts zkHosts, String topic) {
-        SpoutConfig spoutConfig = new SpoutConfig(zkHosts, topic, "", "foo");
+        SpoutConfig spoutConfig = new SpoutConfig(zkHosts, topic, "/kafka-spout", "taxi");
         spoutConfig.scheme = new SchemeAsMultiScheme(new TaxiEntryScheme());
 
         return new KafkaDataSpout(spoutConfig);
