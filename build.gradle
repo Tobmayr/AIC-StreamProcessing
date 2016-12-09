@@ -45,13 +45,14 @@ dependencies {
     compile (group: 'org.apache.storm', name: 'storm-core', version: '1.0.2') {
         exclude module: "log4j-over-slf4j"
     }
-    
 
     compile (group: 'org.apache.storm', name: 'storm-kafka', version: '1.0.2') {
         exclude module: "slf4j-log4j12"
         exclude module: "log4j-over-slf4j"
     }
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.4'
+	compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
+
 
     compile (group: 'org.apache.curator', name: 'curator-framework', version: '3.2.0') {
         exclude module: "log4j-over-slf4j"
