@@ -6,7 +6,9 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiFixedDataSpout;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.RedisFunction;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.StoreInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.StoreInformation.OperatorType;
+
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -30,22 +32,19 @@ public class TridentProcessingTopology {
         Fields taxiFieldsWithAvgSpeed = new Fields("id", "timestamp", "latitude", "longitude", "speed", "avgSpeed");
         Fields taxiFieldsWithDistance = new Fields("id", "timestamp", "latitude", "longitude", "distance");
 
-        // Setup for redis
-        JedisPoolConfig poolConfig = new JedisPoolConfig.Builder().setHost(REDIS_HOST).setPort(REDIS_PORT).build();
-        AverageSpeedStoreMapper averageSpeedStore = new AverageSpeedStoreMapper();
-        DistanceStoreMapper distanceStore = new DistanceStoreMapper();
-        RedisState.Factory factory = new RedisState.Factory(poolConfig);
 
         TridentTopology topology = new TridentTopology();
         TestTaxiFixedDataSpout spout = new TestTaxiFixedDataSpout();
         Stream inputStream = topology.newStream("taxi", spout);
+
+
         inputStream.partitionAggregate(taxiFields, new CalculateSpeed(), taxiFieldsWithSpeed).toStream().each(taxiFieldsWithSpeed, new Debug("speed"))
                 .partitionAggregate(taxiFieldsWithSpeed, new CalculateAverageSpeed(), taxiFieldsWithAvgSpeed).toStream()
-                .each(taxiFieldsWithSpeed, new Debug("avgSpeed"))
-                .partitionPersist(factory, taxiFieldsWithAvgSpeed, new RedisStateUpdater(averageSpeedStore).withExpire(86400000), new Fields());
+                .each(taxiFieldsWithAvgSpeed, new Debug("avgSpeed")).each(taxiFieldsWithAvgSpeed, new StoreInformation(OperatorType.AVERGAGE_SPEED));
 
         inputStream.partitionAggregate(taxiFields, new CalculateDistance(), taxiFieldsWithDistance).toStream()
-                .each(taxiFieldsWithDistance, new Debug("distance"));
+                .each(taxiFieldsWithDistance, new Debug("distance")).each(taxiFieldsWithDistance, new StoreInformation(OperatorType.DISTANCE));
+
 
         return topology.build();
     }
