@@ -57,7 +57,7 @@ public class TridentProcessingTopology {
     }
 
     public static LocalKafkaInstance startZookeeperAndKafka(String topic) throws Exception {
-        LocalKafkaInstance kafka = new LocalKafkaInstance(9002, 2000);
+        LocalKafkaInstance kafka = new LocalKafkaInstance(9092, 2000);
 
         kafka.start();
         kafka.createTopic(topic);
