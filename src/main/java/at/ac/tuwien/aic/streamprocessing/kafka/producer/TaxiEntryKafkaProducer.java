@@ -1,7 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.producer;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.provider.TaxiEntryProvider;
-import at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntrySerializer;
+import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ public class TaxiEntryKafkaProducer {
     private final Logger logger = LoggerFactory.getLogger(TaxiEntryKafkaProducer.class);
 
     private String topic;
-    private KafkaProducer<Integer, byte[]> producer;
+    private KafkaProducer<Integer, TaxiEntry> producer;
 
     /**
      * Instantiates a new TaxiEntryKafkaProducer.
@@ -44,10 +44,7 @@ public class TaxiEntryKafkaProducer {
     public void produce(TaxiEntryProvider provider) {
         provider.getEntries().forEach(entry -> {
             logger.debug("Produce " + entry.toString());
-
-            byte[] serialized = TaxiEntrySerializer.serialize(entry);
-            ProducerRecord<Integer, byte[]> record = new ProducerRecord<>(topic, entry.getTaxiId(), serialized);
-
+            ProducerRecord<Integer, TaxiEntry> record = new ProducerRecord<>(topic, entry.getTaxiId(), entry);
             producer.send(record);
         });
     }
