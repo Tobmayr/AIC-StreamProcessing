@@ -128,7 +128,7 @@ public class DataProvider {
         producerProperties.put("bootstrap.servers", KAFKA_URI);
         producerProperties.put("acks", "1");
         producerProperties.put("key.serializer", "org.apache.kafka.common.serialization.IntegerSerializer");
-        producerProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+        producerProperties.put("value.serializer", "at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntrySerializer");
         return producerProperties;
     }
 
