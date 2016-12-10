@@ -76,7 +76,6 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
     @Test
     public void test_multipleEntriesAtSameTime_yieldsZeroValues() throws Exception {
-        // model a moving taxi
         LocalDateTime now = LocalDateTime.now();
         List<TaxiEntry> taxis = Arrays.asList(
                 new TaxiEntry(1, now, 10.0, 10.0),
@@ -107,8 +106,45 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
     }
 
     @Test
+    public void test_multipleEntriesAtSameTimeThenDisparateEntries_yieldsMeaningfulValues() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        List<TaxiEntry> taxis = Arrays.asList(
+                new TaxiEntry(1, now, 10.0, 10.0),
+                new TaxiEntry(1, now, 10.5, 10.0),
+                new TaxiEntry(1, now, 10.0, 10.0),
+                new TaxiEntry(1, now.plusMinutes(60), 10.5, 10.0),
+                new TaxiEntry(1, now.plusMinutes(2 * 60), 10.0, 10.0)
+        );
+
+        emitTaxis(taxis);
+
+        wait(10);
+
+        assertThat(getSpeedTupleListener().getTuples(), hasSize(4));
+        assertThat(getDistanceTupleListener().getTuples(), hasSize(4));
+        assertThat(getAvgSpeedTupleListener().getTuples(), hasSize(3));
+
+        double dist = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
+
+        // Make sure that initial inconsistent values (i.e. multiple entries at the same time)
+        // do not trap the calculations of later, meaningful entries
+        assertThat(getSpeedTupleListener().getTuples().get(0).speed, equalTo(0.0));
+        assertThat(getSpeedTupleListener().getTuples().get(1).speed, equalTo(0.0));
+        assertThat(getSpeedTupleListener().getTuples().get(2).speed, equalTo(dist));
+        assertThat(getSpeedTupleListener().getTuples().get(3).speed, equalTo(dist));
+
+        assertThat(getDistanceTupleListener().getTuples().get(0).distance, equalTo(0.0));
+        assertThat(getDistanceTupleListener().getTuples().get(1).distance, equalTo(0.0));
+        assertThat(getDistanceTupleListener().getTuples().get(2).distance, equalTo(dist));
+        assertThat(getDistanceTupleListener().getTuples().get(3).distance, equalTo(dist + dist));
+
+        assertThat(getAvgSpeedTupleListener().getTuples().get(0).avgSpeed, equalTo(0.0));
+        assertThat(getAvgSpeedTupleListener().getTuples().get(1).avgSpeed, equalTo(dist));
+        assertThat(getAvgSpeedTupleListener().getTuples().get(2).avgSpeed, equalTo(dist));
+    }
+
+    @Test
     public void test_multipleEntriesAtSameTime_yieldsMeaningfulValues() throws Exception {
-        // model a moving taxi
         LocalDateTime now = LocalDateTime.now();
         List<TaxiEntry> taxis = Arrays.asList(
                 new TaxiEntry(1, now, 10.0, 10.0),
