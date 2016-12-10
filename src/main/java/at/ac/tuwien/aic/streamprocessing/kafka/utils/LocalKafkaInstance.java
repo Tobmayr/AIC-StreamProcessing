@@ -39,6 +39,10 @@ public class LocalKafkaInstance {
         return zookeeperServer.getConnectString();
     }
 
+    public String getKafkaConnectString() {
+        return "localhost:" + kafka_port;
+    }
+
     public void start() throws Exception {
         System.out.println("Starting zookeeper.");
         this.zookeeperServer = new TestingServer(zookeeper_port, new File("/tmp/zookeeper-logs"));
