@@ -29,17 +29,17 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         wait(10);
 
         // three data points yield two speed + distance updates and one average speed update
-        assertThat(getSpeedHook().getTuples(), hasSize(2));
-        assertThat(getDistanceHook().getTuples(), hasSize(2));
-        assertThat(getAvgSpeedHook().getTuples(), hasSize(1));
+        assertThat(getSpeedTupleListener().getTuples(), hasSize(2));
+        assertThat(getDistanceTupleListener().getTuples(), hasSize(2));
+        assertThat(getAvgSpeedTupleListener().getTuples(), hasSize(1));
 
-        assertThat(getSpeedHook().getTuples().get(0).speed, equalTo(0.0));
-        assertThat(getSpeedHook().getTuples().get(1).speed, equalTo(0.0));
+        assertThat(getSpeedTupleListener().getTuples().get(0).speed, equalTo(0.0));
+        assertThat(getSpeedTupleListener().getTuples().get(1).speed, equalTo(0.0));
 
-        assertThat(getDistanceHook().getTuples().get(0).distance, equalTo(0.0));
-        assertThat(getDistanceHook().getTuples().get(0).distance, equalTo(0.0));
+        assertThat(getDistanceTupleListener().getTuples().get(0).distance, equalTo(0.0));
+        assertThat(getDistanceTupleListener().getTuples().get(0).distance, equalTo(0.0));
 
-        assertThat(getAvgSpeedHook().getTuples().get(0).avgSpeed, equalTo(0.0));
+        assertThat(getAvgSpeedTupleListener().getTuples().get(0).avgSpeed, equalTo(0.0));
     }
 
     @Test
@@ -57,20 +57,20 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         wait(10);
 
         // three data points yield two speed + distance updates and one average speed update
-        assertThat(getSpeedHook().getTuples(), hasSize(2));
-        assertThat(getDistanceHook().getTuples(), hasSize(2));
-        assertThat(getAvgSpeedHook().getTuples(), hasSize(1));
+        assertThat(getSpeedTupleListener().getTuples(), hasSize(2));
+        assertThat(getDistanceTupleListener().getTuples(), hasSize(2));
+        assertThat(getAvgSpeedTupleListener().getTuples(), hasSize(1));
 
         // As both trips are of equal length and take an hour each, all values should be the same
         double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
         double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
 
-        assertThat(getSpeedHook().getTuples().get(0).speed, equalTo(dist1));
-        assertThat(getSpeedHook().getTuples().get(1).speed, equalTo(dist2));
+        assertThat(getSpeedTupleListener().getTuples().get(0).speed, equalTo(dist1));
+        assertThat(getSpeedTupleListener().getTuples().get(1).speed, equalTo(dist2));
 
-        assertThat(getDistanceHook().getTuples().get(0).distance, equalTo(dist1));
-        assertThat(getDistanceHook().getTuples().get(0).distance, equalTo(dist2));
+        assertThat(getDistanceTupleListener().getTuples().get(0).distance, equalTo(dist1));
+        assertThat(getDistanceTupleListener().getTuples().get(0).distance, equalTo(dist2));
 
-        assertThat(getAvgSpeedHook().getTuples().get(0).avgSpeed, equalTo(dist1));
+        assertThat(getAvgSpeedTupleListener().getTuples().get(0).avgSpeed, equalTo(dist1));
     }
 }

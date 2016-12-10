@@ -26,9 +26,9 @@ public class TridentProcessingTopology {
     private final String redisHost;
     private final int redisPort;
 
-    private final BaseFilter speedHook;
-    private final BaseFilter avgSpeedHook;
-    private final BaseFilter distanceHook;
+    private final BaseFilter speedTupleListener;
+    private final BaseFilter avgSpeedTupleListener;
+    private final BaseFilter distanceTupleListener;
 
     private LocalKafkaInstance localKafkaInstance;
     private TridentTopology topology;
@@ -41,18 +41,18 @@ public class TridentProcessingTopology {
         this.redisHost = redisHost;
         this.redisPort = redisPort;
 
-        this.speedHook = null;
-        this.avgSpeedHook = null;
-        this.distanceHook = null;
+        this.speedTupleListener = null;
+        this.avgSpeedTupleListener = null;
+        this.distanceTupleListener = null;
     }
 
-    public TridentProcessingTopology(String topic, String redisHost, int redisPort, BaseFilter speedHook, BaseFilter avgSpeedHook, BaseFilter distanceHook) {
+    public TridentProcessingTopology(String topic, String redisHost, int redisPort, BaseFilter speedTupleListener, BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
-        this.speedHook = speedHook;
-        this.avgSpeedHook = avgSpeedHook;
-        this.distanceHook = distanceHook;
+        this.speedTupleListener = speedTupleListener;
+        this.avgSpeedTupleListener = avgSpeedTupleListener;
+        this.distanceTupleListener = distanceTupleListener;
     }
 
     public void stop() {
@@ -117,8 +117,8 @@ public class TridentProcessingTopology {
                 .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS)
                 .toStream();
 
-        if (speedHook != null) {
-            speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedHook);
+        if (speedTupleListener != null) {
+            speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedTupleListener);
         }
 
         // setup average speed aggregator
@@ -126,8 +126,8 @@ public class TridentProcessingTopology {
                 .partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS)
                 .toStream();
 
-        if (avgSpeedHook != null) {
-            speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedHook);
+        if (avgSpeedTupleListener != null) {
+            speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
         }
 
         // TODO: enable
@@ -137,9 +137,9 @@ public class TridentProcessingTopology {
         Stream distanceStream = inputStream
                 .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
 
-        if (distanceHook != null) {
+        if (distanceTupleListener != null) {
             distanceStream = distanceStream.toStream()
-                    .each(TaxiFields.BASE_DISTANCE_FIELDS, distanceHook);
+                    .each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
         }
 
         // TODO: enable
@@ -175,24 +175,24 @@ public class TridentProcessingTopology {
         cluster.submitTopology("stream-processing", conf, build());
     }
 
-    public static TridentProcessingTopology createWithHooks(BaseFilter speedHook, BaseFilter avgSpeedHook, BaseFilter distanceHook) throws Exception {
+    public static TridentProcessingTopology createWithListeners(BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener) throws Exception {
         return new TridentProcessingTopology(
                 "taxi", "localhost", 6379,
-                speedHook, avgSpeedHook, distanceHook);
+                speedListener, avgSpeedListener, distanceListener);
     }
 
-    public static TridentProcessingTopology createWithTopicAndHooks(String topic, BaseFilter speedHook, BaseFilter avgSpeedHook, BaseFilter distanceHook) throws Exception {
+    public static TridentProcessingTopology createWithTopicAndListeners(String topic, BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener) throws Exception {
         return new TridentProcessingTopology(
                 topic, "localhost", 6379,
-                speedHook, avgSpeedHook, distanceHook);
+                speedListener, avgSpeedListener, distanceListener);
     }
 
     public static void main(String[] args) throws Exception {
-        BaseFilter speedHook = new Debug("speed");
-        BaseFilter avgSpeedHook = new Debug("avgSpeed");
-        BaseFilter distanceHook = new Debug("distance");
+        BaseFilter speedListener = new Debug("speed");
+        BaseFilter avgSpeedListener = new Debug("avgSpeed");
+        BaseFilter distanceListener = new Debug("distance");
 
-        TridentProcessingTopology topology = createWithHooks(speedHook, avgSpeedHook, distanceHook);
+        TridentProcessingTopology topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
         topology.submitLocalCluster();
 
         try {

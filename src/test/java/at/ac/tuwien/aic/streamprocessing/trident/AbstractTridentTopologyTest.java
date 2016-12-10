@@ -1,9 +1,9 @@
 package at.ac.tuwien.aic.streamprocessing.trident;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
-import at.ac.tuwien.aic.streamprocessing.trident.utils.AvgSpeedHook;
-import at.ac.tuwien.aic.streamprocessing.trident.utils.DistanceHook;
-import at.ac.tuwien.aic.streamprocessing.trident.utils.SpeedHook;
+import at.ac.tuwien.aic.streamprocessing.trident.utils.AvgSpeedTupleListener;
+import at.ac.tuwien.aic.streamprocessing.trident.utils.DistanceTupleListener;
+import at.ac.tuwien.aic.streamprocessing.trident.utils.SpeedTupleListener;
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.storm.TridentProcessingTopology;
 import org.apache.storm.utils.Time;
@@ -18,23 +18,23 @@ public class AbstractTridentTopologyTest {
     private static final String TOPIC = "taxi-test";
 
     private TridentProcessingTopology topology;
-    private SpeedHook speedHook;
-    private AvgSpeedHook avgSpeedHook;
-    private DistanceHook distanceHook;
+    private SpeedTupleListener speedTupleListener;
+    private AvgSpeedTupleListener avgSpeedTupleListener;
+    private DistanceTupleListener distanceTupleListener;
 
     private TaxiEntryKafkaProducer producer;
 
     @Before
     public void setup() throws Exception {
-        speedHook = new SpeedHook();
-        avgSpeedHook = new AvgSpeedHook();
-        distanceHook = new DistanceHook();
+        speedTupleListener = new SpeedTupleListener();
+        avgSpeedTupleListener = new AvgSpeedTupleListener();
+        distanceTupleListener = new DistanceTupleListener();
 
-        topology = TridentProcessingTopology.createWithTopicAndHooks(
+        topology = TridentProcessingTopology.createWithTopicAndListeners(
                 TOPIC,
-                speedHook,
-                avgSpeedHook,
-                distanceHook
+                speedTupleListener,
+                avgSpeedTupleListener,
+                distanceTupleListener
         );
 
         topology.submitLocalCluster();
@@ -72,15 +72,15 @@ public class AbstractTridentTopologyTest {
         }
     }
 
-    public SpeedHook getSpeedHook() {
-        return speedHook;
+    public SpeedTupleListener getSpeedTupleListener() {
+        return speedTupleListener;
     }
 
-    public AvgSpeedHook getAvgSpeedHook() {
-        return avgSpeedHook;
+    public AvgSpeedTupleListener getAvgSpeedTupleListener() {
+        return avgSpeedTupleListener;
     }
 
-    public DistanceHook getDistanceHook() {
-        return distanceHook;
+    public DistanceTupleListener getDistanceTupleListener() {
+        return distanceTupleListener;
     }
 }

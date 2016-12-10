@@ -1,12 +1,13 @@
 package at.ac.tuwien.aic.streamprocessing.trident.utils;
 
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.tuple.TridentTuple;
 
 import java.time.LocalDateTime;
 
-public class AvgSpeedHook extends TridentHook<AvgSpeedHook.AvgSpeedTuple> {
+public class AvgSpeedTupleListener extends TridentTupleListener<AvgSpeedTupleListener.AvgSpeedTuple> {
 
-    public AvgSpeedHook() {
+    public AvgSpeedTupleListener() {
         super("avgSpeed");
     }
 
@@ -14,7 +15,7 @@ public class AvgSpeedHook extends TridentHook<AvgSpeedHook.AvgSpeedTuple> {
     protected AvgSpeedTuple transformTuple(TridentTuple tuple) {
         return new AvgSpeedTuple(
                 tuple.getIntegerByField("id"),
-                Tuple.parseDateTime(tuple.getStringByField("timestamp")),
+                Timestamp.parse(tuple.getStringByField("timestamp")),
                 tuple.getDoubleByField("latitude"),
                 tuple.getDoubleByField("longitude"),
                 tuple.getDoubleByField("speed"),
@@ -22,7 +23,7 @@ public class AvgSpeedHook extends TridentHook<AvgSpeedHook.AvgSpeedTuple> {
         );
     }
 
-    public static class AvgSpeedTuple extends SpeedHook.SpeedTuple {
+    public static class AvgSpeedTuple extends SpeedTupleListener.SpeedTuple {
         public double avgSpeed;
 
         public AvgSpeedTuple(int id, LocalDateTime timestamp, double latitude, double longitude, double speed, double avgSpeed) {

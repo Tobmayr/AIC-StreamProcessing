@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class TridentHook<T> extends BaseFilter {
+public abstract class TridentTupleListener<T> extends BaseFilter {
 
     private String name;
     private static Map<String, List<Object>> tuplesByName = new ConcurrentHashMap<>();
 
-    public TridentHook(String name) {
+    public TridentTupleListener(String name) {
         this.name = name;
 
         tuplesByName.put(name, Collections.synchronizedList(new ArrayList<>()));
@@ -38,7 +38,6 @@ public abstract class TridentHook<T> extends BaseFilter {
     protected abstract T transformTuple(TridentTuple tuple);
 
     public static class Tuple {
-
         public int id;
         public LocalDateTime timestamp;
         public double latitude;
@@ -49,10 +48,6 @@ public abstract class TridentHook<T> extends BaseFilter {
             this.timestamp = timestamp;
             this.latitude = latitude;
             this.longitude = longitude;
-        }
-
-        public static LocalDateTime parseDateTime(String s) {
-            return Timestamp.parse(s);
         }
     }
 }
