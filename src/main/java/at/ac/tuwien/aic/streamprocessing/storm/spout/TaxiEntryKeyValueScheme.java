@@ -21,17 +21,24 @@ public class TaxiEntryKeyValueScheme implements KeyValueScheme {
 
     @Override
     public List<Object> deserialize(ByteBuffer ser) {
-        //TODO we should not deserialize twice, don't really know why this works lol
         String valueString = StringScheme.deserializeString(ser);
         TaxiEntry entry =  TaxiEntryDeserializer.deserialize(valueString.getBytes());
-        System.out.println("deserialized " + entry);
-        String timestamp = Timestamp.toString(entry.getTimestamp());
-        return new Values(entry.getTaxiId(), timestamp, entry.getLatitude(), entry.getLongitude());
+
+        if (entry == null) {
+            // failed to deserialize
+            return null;
+        }
+
+        return new Values(
+                entry.getTaxiId(),
+                Timestamp.toString(entry.getTimestamp()),
+                entry.getLatitude(),
+                entry.getLongitude()
+        );
     }
 
     @Override
     public Fields getOutputFields() {
         return TaxiFields.BASE_FIELDS;
     }
-
 }
