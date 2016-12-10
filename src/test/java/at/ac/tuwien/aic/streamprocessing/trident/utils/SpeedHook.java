@@ -12,7 +12,13 @@ public class SpeedHook extends TridentHook<SpeedHook.SpeedTuple> {
 
     @Override
     protected SpeedTuple transformTuple(TridentTuple tuple) {
-        return new SpeedTuple(0, null, 0.0, 0.0, 0.0);
+        return new SpeedTuple(
+                tuple.getIntegerByField("id"),
+                Tuple.parseDateTime(tuple.getStringByField("timestamp")),
+                tuple.getDoubleByField("latitude"),
+                tuple.getDoubleByField("longitude"),
+                tuple.getDoubleByField("speed")
+        );
     }
 
     public static class SpeedTuple extends TridentHook.Tuple {

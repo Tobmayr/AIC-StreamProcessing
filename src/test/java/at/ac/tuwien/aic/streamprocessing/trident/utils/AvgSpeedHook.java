@@ -12,7 +12,14 @@ public class AvgSpeedHook extends TridentHook<AvgSpeedHook.AvgSpeedTuple> {
 
     @Override
     protected AvgSpeedTuple transformTuple(TridentTuple tuple) {
-        return new AvgSpeedTuple(0, null, 0.0, 0.0, 0.0, 0.0);
+        return new AvgSpeedTuple(
+                tuple.getIntegerByField("id"),
+                Tuple.parseDateTime(tuple.getStringByField("timestamp")),
+                tuple.getDoubleByField("latitude"),
+                tuple.getDoubleByField("longitude"),
+                tuple.getDoubleByField("speed"),
+                tuple.getDoubleByField("avgSpeed")
+        );
     }
 
     public static class AvgSpeedTuple extends SpeedHook.SpeedTuple {

@@ -12,7 +12,13 @@ public class DistanceHook extends TridentHook<DistanceHook.DistanceTuple> {
 
     @Override
     protected DistanceTuple transformTuple(TridentTuple tuple) {
-        return new DistanceTuple(0, null, 0.0, 0.0, 0.0);
+        return new DistanceTuple(
+                tuple.getIntegerByField("id"),
+                Tuple.parseDateTime(tuple.getStringByField("timestamp")),
+                tuple.getDoubleByField("latitude"),
+                tuple.getDoubleByField("longitude"),
+                tuple.getDoubleByField("distance")
+        );
     }
 
     public static class DistanceTuple extends TridentHook.Tuple {
