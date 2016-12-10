@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Base64;
 
 /**
  * Deserializer for taxi entries.
@@ -21,15 +22,15 @@ public class TaxiEntryDeserializer {
      * @return the corresponding taxi entry
      */
     public static TaxiEntry deserialize(byte[] bytes) {
-        try (ByteArrayInputStream byteArrayStream = new ByteArrayInputStream(bytes)) {
+        try (ByteArrayInputStream byteArrayStream = new ByteArrayInputStream(Base64.getDecoder().decode(bytes))) {
             try (ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayStream)) {
                 return (TaxiEntry) objectInputStream.readObject();
             } catch (ClassNotFoundException e) {
-                logger.debug("Failed to deserialize TaxiEntry", e);
+                System.out.println("Failed to deserialize TaxiEntry" + e);
                 return null;
             }
         } catch (IOException e) {
-            logger.debug("Failed to deserialize TaxiEntry", e);
+            System.out.println("Failed to deserialize TaxiEntry" + e);
             return null;
         }
     }
