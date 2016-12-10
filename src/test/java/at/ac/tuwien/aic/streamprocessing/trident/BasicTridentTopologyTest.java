@@ -61,6 +61,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(getDistanceHook().getTuples(), hasSize(2));
         assertThat(getAvgSpeedHook().getTuples(), hasSize(1));
 
+        // As both trips are of equal length and take an hour each, all values should be the same
         double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
         double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
 
