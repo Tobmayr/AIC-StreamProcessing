@@ -8,9 +8,12 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 
 import java.nio.ByteBuffer;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class TaxiEntryKeyValueScheme implements KeyValueScheme {
+
+    private static final DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public List<Object> deserializeKeyAndValue(ByteBuffer key, ByteBuffer value) {
@@ -23,7 +26,8 @@ public class TaxiEntryKeyValueScheme implements KeyValueScheme {
         String valueString = StringScheme.deserializeString(ser);
         TaxiEntry entry =  TaxiEntryDeserializer.deserialize(valueString.getBytes());
         System.out.println("deserialized " + entry);
-        return new Values(entry.getTaxiId(), entry.getTimestamp().toString(), entry.getLatitude(), entry.getLongitude());
+        String timestamp = entry.getTimestamp().format(dateTimeFormatter);
+        return new Values(entry.getTaxiId(), timestamp, entry.getLatitude(), entry.getLongitude());
     }
 
     @Override
