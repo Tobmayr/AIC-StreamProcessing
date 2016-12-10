@@ -32,6 +32,9 @@ public class TridentProcessingTopology {
 
     private LocalKafkaInstance localKafkaInstance;
     private TridentTopology topology;
+    private LocalCluster cluster;
+
+    private boolean stopped = false;
 
     public TridentProcessingTopology(String topic, String redisHost, int redisPort) {
         this.topic = topic;
@@ -52,7 +55,25 @@ public class TridentProcessingTopology {
         this.distanceHook = distanceHook;
     }
 
-    public void startKafka() {
+    public void stop() {
+        if (stopped) {
+            return;
+        }
+
+        stopped = true;
+
+        try {
+            cluster.shutdown();
+            stopKafka();
+        } catch (Exception e) {
+            System.out.println("Failed to stop cluster.");
+            e.printStackTrace();
+
+            System.exit(1);
+        }
+    }
+
+    private void startKafka() {
         localKafkaInstance = new LocalKafkaInstance(9092, 2000);
 
         try {
@@ -67,7 +88,7 @@ public class TridentProcessingTopology {
         localKafkaInstance.createTopic(topic);
     }
 
-    public void stopKafka() {
+    private void stopKafka() {
         try {
             localKafkaInstance.stop();
         } catch (Exception e) {
@@ -127,6 +148,14 @@ public class TridentProcessingTopology {
         return topology.build();
     }
 
+    public String getTopic() {
+        return topic;
+    }
+
+    public LocalKafkaInstance getKafkaInstance() {
+        return localKafkaInstance;
+    }
+
     private OpaqueTridentKafkaSpout buildKafkaSpout() {
         ZkHosts zkHosts = new ZkHosts(localKafkaInstance.getConnectString());
         TridentKafkaConfig spoutConfig = new TridentKafkaConfig(zkHosts, topic);
@@ -135,29 +164,26 @@ public class TridentProcessingTopology {
         return new OpaqueTridentKafkaSpout(spoutConfig);
     }
 
-    public void runLocalCluster(int timeout) {
+    public void submitLocalCluster() {
         Config conf = new Config();
         conf.setDebug(false);
         conf.setMaxTaskParallelism(1);
 
         startKafka();
 
-        LocalCluster cluster = new LocalCluster();
+        cluster = new LocalCluster();
         cluster.submitTopology("stream-processing", conf, build());
-
-        try {
-            Thread.sleep(timeout * 1000);
-        } catch (InterruptedException e) {
-
-        }
-
-        cluster.shutdown();
-        stopKafka();
     }
 
     public static TridentProcessingTopology createWithHooks(BaseFilter speedHook, BaseFilter avgSpeedHook, BaseFilter distanceHook) throws Exception {
         return new TridentProcessingTopology(
                 "taxi", "localhost", 6379,
+                speedHook, avgSpeedHook, distanceHook);
+    }
+
+    public static TridentProcessingTopology createWithTopicAndHooks(String topic, BaseFilter speedHook, BaseFilter avgSpeedHook, BaseFilter distanceHook) throws Exception {
+        return new TridentProcessingTopology(
+                topic, "localhost", 6379,
                 speedHook, avgSpeedHook, distanceHook);
     }
 
@@ -167,7 +193,15 @@ public class TridentProcessingTopology {
         BaseFilter distanceHook = new Debug("distance");
 
         TridentProcessingTopology topology = createWithHooks(speedHook, avgSpeedHook, distanceHook);
-        topology.runLocalCluster(60);
+        topology.submitLocalCluster();
+
+        try {
+            Thread.sleep(60* 1000);
+        } catch (InterruptedException e) {
+
+        }
+
+        topology.stop();
     }
 
     public static class TridentFields {
