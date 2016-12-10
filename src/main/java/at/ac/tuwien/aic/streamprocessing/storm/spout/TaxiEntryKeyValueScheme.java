@@ -2,18 +2,16 @@ package at.ac.tuwien.aic.streamprocessing.storm.spout;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntryDeserializer;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.kafka.KeyValueScheme;
 import org.apache.storm.kafka.StringScheme;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 
 import java.nio.ByteBuffer;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class TaxiEntryKeyValueScheme implements KeyValueScheme {
-
-    private static final DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public List<Object> deserializeKeyAndValue(ByteBuffer key, ByteBuffer value) {
@@ -26,7 +24,7 @@ public class TaxiEntryKeyValueScheme implements KeyValueScheme {
         String valueString = StringScheme.deserializeString(ser);
         TaxiEntry entry =  TaxiEntryDeserializer.deserialize(valueString.getBytes());
         System.out.println("deserialized " + entry);
-        String timestamp = entry.getTimestamp().format(dateTimeFormatter);
+        String timestamp = Timestamp.toString(entry.getTimestamp());
         return new Values(entry.getTaxiId(), timestamp, entry.getLatitude(), entry.getLongitude());
     }
 

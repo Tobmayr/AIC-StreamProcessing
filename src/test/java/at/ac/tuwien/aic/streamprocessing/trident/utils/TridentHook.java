@@ -1,10 +1,10 @@
 package at.ac.tuwien.aic.streamprocessing.trident.utils;
 
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +38,6 @@ public abstract class TridentHook<T> extends BaseFilter {
     protected abstract T transformTuple(TridentTuple tuple);
 
     public static class Tuple {
-        private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         public int id;
         public LocalDateTime timestamp;
@@ -53,7 +52,7 @@ public abstract class TridentHook<T> extends BaseFilter {
         }
 
         public static LocalDateTime parseDateTime(String s) {
-            return LocalDateTime.parse(s, dateTimeFormatter);
+            return Timestamp.parse(s);
         }
     }
 }

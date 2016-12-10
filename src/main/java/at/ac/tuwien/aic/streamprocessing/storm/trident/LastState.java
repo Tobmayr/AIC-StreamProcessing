@@ -1,13 +1,12 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
-import org.apache.storm.shade.org.joda.time.DateTime;
-import org.apache.storm.shade.org.joda.time.Duration;
-import org.apache.storm.shade.org.joda.time.format.DateTimeFormat;
-import org.apache.storm.shade.org.joda.time.format.DateTimeFormatter;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.BaseAggregator;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 import static at.ac.tuwien.aic.streamprocessing.storm.trident.Haversine.haversine;
@@ -20,17 +19,14 @@ public abstract class LastState<T> extends BaseAggregator<LocationMapState<T>> {
         Double latitude = t1.getDoubleByField("latitude");
         Double longitude = t1.getDoubleByField("longitude");
 
-        Double lastLatitude = oldLatitude;
-        Double lastLongitude = oldLongitude;
-
-        return haversine(lastLatitude, lastLongitude, latitude, longitude);
+        return haversine(oldLatitude, oldLongitude, latitude, longitude);
     }
 
     public Double time(String startTimestamp, String endTimestamp) {
-        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-        DateTime startTime = fmt.parseDateTime(startTimestamp);
-        DateTime endTime = fmt.parseDateTime(endTimestamp);
-        return (new Duration(startTime, endTime)).getMillis() / 3600000.0;
+        LocalDateTime startTime = Timestamp.parse(startTimestamp);
+        LocalDateTime endTime = Timestamp.parse(endTimestamp);
+
+        return ChronoUnit.MILLIS.between(startTime, endTime) / (60. * 60.0 * 1000.0);
     }
 
     public LocationMapState<T> init(Object batchId, TridentCollector collector) {

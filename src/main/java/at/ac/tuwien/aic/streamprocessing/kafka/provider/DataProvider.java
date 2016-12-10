@@ -2,6 +2,7 @@ package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -14,7 +15,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,8 +27,7 @@ import java.util.Properties;
 public class DataProvider {
     private static final Logger logger = LoggerFactory.getLogger(DataProvider.class);
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final LocalDateTime REFERENCE_START_TIME = LocalDateTime.parse("2008-02-02 13:30:45", formatter);
+    private static final LocalDateTime REFERENCE_START_TIME = Timestamp.parse("2008-02-02 13:30:45");
 
     private static final int KAFKA_PORT = 9092;
     private static final String KAFKA_URI = "localhost:" + KAFKA_PORT;
@@ -112,7 +111,7 @@ public class DataProvider {
     private TaxiEntry parseCsvRecord(CSVRecord record) {
         try {
             Integer taxiId = Integer.parseInt(record.get(0));
-            LocalDateTime timestamp = LocalDateTime.parse(record.get(1), formatter);
+            LocalDateTime timestamp = Timestamp.parse(record.get(1));
             double latitude = Double.parseDouble(record.get(2));
             double longitude = Double.parseDouble(record.get(3));
 
