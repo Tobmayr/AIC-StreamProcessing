@@ -1,11 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
-import at.ac.tuwien.aic.streamprocessing.storm.redis.AverageSpeedStoreMapper;
-import at.ac.tuwien.aic.streamprocessing.storm.redis.DistanceStoreMapper;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.KafkaDataSpout;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryScheme;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TestTaxiFixedDataSpout;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
@@ -15,16 +11,11 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.StoreInformation.Operator
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
+import org.apache.storm.kafka.KeyValueSchemeAsMultiScheme;
 import org.apache.storm.kafka.ZkHosts;
 import org.apache.storm.kafka.trident.OpaqueTridentKafkaSpout;
 import org.apache.storm.kafka.trident.TridentKafkaConfig;
-import org.apache.storm.redis.common.config.JedisPoolConfig;
-import org.apache.storm.redis.trident.state.RedisState;
-import org.apache.storm.redis.trident.state.RedisStateQuerier;
-import org.apache.storm.redis.trident.state.RedisStateUpdater;
-import org.apache.storm.spout.SchemeAsMultiScheme;
 import org.apache.storm.trident.Stream;
-import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.builtin.Debug;
 import org.apache.storm.tuple.Fields;
@@ -43,7 +34,7 @@ public class TridentProcessingTopology {
         TridentTopology topology = new TridentTopology();
         ZkHosts zkHosts = new ZkHosts(zkConnect);
         TridentKafkaConfig spoutConf = new TridentKafkaConfig(zkHosts, "taxi");
-        spoutConf.scheme = new SchemeAsMultiScheme(new TaxiEntryScheme());
+        spoutConf.scheme = new KeyValueSchemeAsMultiScheme(new TaxiEntryKeyValueScheme());
         OpaqueTridentKafkaSpout spout = new OpaqueTridentKafkaSpout(spoutConf);
 
         Stream inputStream = topology.newStream("kafka-spout", spout);
