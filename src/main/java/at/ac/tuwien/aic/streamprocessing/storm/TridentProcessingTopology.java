@@ -5,6 +5,7 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -16,7 +17,6 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
-import org.apache.storm.tuple.Fields;
 
 public class TridentProcessingTopology {
     private static final String SPOUT_ID = "kafka-spout";
@@ -114,20 +114,20 @@ public class TridentProcessingTopology {
 
         // setup speed aggregator
         Stream speedStream = inputStream
-                .partitionAggregate(TridentFields.base, new CalculateSpeed(), TridentFields.baseAndSpeed)
+                .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS)
                 .toStream();
 
         if (speedHook != null) {
-            speedStream = speedStream.each(TridentFields.baseAndSpeed, speedHook);
+            speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedHook);
         }
 
         // setup average speed aggregator
         speedStream = speedStream
-                .partitionAggregate(TridentFields.baseAndSpeed, new CalculateAverageSpeed(), TridentFields.baseAndSpeedAndAvgSpeed)
+                .partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS)
                 .toStream();
 
         if (avgSpeedHook != null) {
-            speedStream = speedStream.each(TridentFields.baseAndSpeedAndAvgSpeed, avgSpeedHook);
+            speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedHook);
         }
 
         // TODO: enable
@@ -135,11 +135,11 @@ public class TridentProcessingTopology {
 
         // setup distance aggregator
         Stream distanceStream = inputStream
-                .partitionAggregate(TridentFields.base, new CalculateDistance(), TridentFields.distance);
+                .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
 
         if (distanceHook != null) {
             distanceStream = distanceStream.toStream()
-                    .each(TridentFields.distance, distanceHook);
+                    .each(TaxiFields.BASE_DISTANCE_FIELDS, distanceHook);
         }
 
         // TODO: enable
@@ -203,12 +203,4 @@ public class TridentProcessingTopology {
 
         topology.stop();
     }
-
-    public static class TridentFields {
-        static Fields base = new Fields("id", "timestamp", "latitude", "longitude");
-        static Fields baseAndSpeed = new Fields("id", "timestamp", "latitude", "longitude", "speed");
-        static Fields baseAndSpeedAndAvgSpeed = new Fields("id", "timestamp", "latitude", "longitude", "speed", "avgSpeed");
-        static Fields distance = new Fields("id", "timestamp", "latitude", "longitude", "distance");
-    }
-
 }
