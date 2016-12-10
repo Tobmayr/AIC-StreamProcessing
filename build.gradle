@@ -98,7 +98,7 @@ test {
 task runDataprovider(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DataProvider"
-    args "/home/kris/projects/uni/aic/data/test_data_merged_sorted/taxi1000.csv", "test", "10"
+    args "./testdata/taxi1000.csv", "test", "10"
 }
 
 task stormJar(type: Jar) {
