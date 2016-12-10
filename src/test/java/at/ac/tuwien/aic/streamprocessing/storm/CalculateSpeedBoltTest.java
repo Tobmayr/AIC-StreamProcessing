@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.kafka.storm;
+package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.storm.bolt.CalculateSpeedBolt;
 import org.apache.storm.task.OutputCollector;

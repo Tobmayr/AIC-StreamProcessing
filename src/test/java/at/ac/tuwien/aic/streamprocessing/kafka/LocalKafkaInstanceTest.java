@@ -1,6 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.kafka;
 
-import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
+import at.ac.tuwien.aic.streamprocessing.kafka.utils.KafkaTestConfiguration;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -23,7 +23,7 @@ public class LocalKafkaInstanceTest extends AbstractLocalKafkaInstanceTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void consume_shouldReceive_producedMessages() {
         // produce some messages
-        Producer<String, String> producer = new KafkaProducer<>(LocalKafkaInstance.createProducerProperties());
+        Producer<String, String> producer = new KafkaProducer<>(KafkaTestConfiguration.createProducerProperties());
         for(int i = 0; i < 100; i++) {
             producer.send(new ProducerRecord<>(TOPIC, Integer.toString(i), Integer.toString(i)));
         }
@@ -32,7 +32,7 @@ public class LocalKafkaInstanceTest extends AbstractLocalKafkaInstanceTest {
         // consume them
         KafkaConsumer<String, String> consumer = null;
         try {
-            consumer = new KafkaConsumer<>(LocalKafkaInstance.createConsumerProperties());
+            consumer = new KafkaConsumer<>(KafkaTestConfiguration.createConsumerProperties());
             consumer.subscribe(Collections.singletonList(TOPIC));
 
             Integer i = 0;

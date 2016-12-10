@@ -20,7 +20,7 @@ public abstract class AbstractLocalKafkaInstanceTest {
 
     @Before
     public void setup() throws Exception {
-        kafkaInstance = new LocalKafkaInstance();
+        kafkaInstance = LocalKafkaInstance.createDefault();
         kafkaInstance.start();
 
         for (String topic : topics) {

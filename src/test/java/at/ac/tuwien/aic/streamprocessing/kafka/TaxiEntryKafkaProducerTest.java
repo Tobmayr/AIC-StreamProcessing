@@ -1,7 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.kafka;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
-import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
+import at.ac.tuwien.aic.streamprocessing.kafka.utils.KafkaTestConfiguration;
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntryDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -32,9 +32,9 @@ public class TaxiEntryKafkaProducerTest extends AbstractLocalKafkaInstanceTest {
                 new TaxiEntry(2, LocalDateTime.now().plusMinutes(10), 100.0, 100.0)
         );
 
-        Properties producerProperties = LocalKafkaInstance.createProducerProperties();
+        Properties producerProperties = KafkaTestConfiguration.createProducerProperties();
         producerProperties.put("key.serializer", "org.apache.kafka.common.serialization.IntegerSerializer");
-        producerProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+        producerProperties.put("value.serializer", "at.ac.tuwien.aic.streamprocessing.model.serialization.TaxiEntrySerializer");
         TaxiEntryKafkaProducer producer = new TaxiEntryKafkaProducer(TOPIC, producerProperties);
 
         producer.produce(expected::stream);
@@ -43,7 +43,7 @@ public class TaxiEntryKafkaProducerTest extends AbstractLocalKafkaInstanceTest {
         // consume them
         KafkaConsumer<Integer, byte[]> consumer = null;
         try {
-            Properties consumerProperties = LocalKafkaInstance.createConsumerProperties();
+            Properties consumerProperties = KafkaTestConfiguration.createConsumerProperties();
             consumerProperties.put("key.deserializer", "org.apache.kafka.common.serialization.IntegerDeserializer");
             consumerProperties.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
             consumer = new KafkaConsumer<>(consumerProperties);
