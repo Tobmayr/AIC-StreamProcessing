@@ -1,8 +1,11 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+
+import java.time.LocalDateTime;
 
 public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
 
@@ -28,9 +31,21 @@ public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
         newPosition.longitude = newTuple.getDoubleByField("longitude");
 
         if (position != null) {
-            Double distance = this.distance(newTuple, position.latitude, position.longitude); // in km
-            Double time = this.time(position.timestamp, newPosition.timestamp); //in hours
-            Double speed = distance / time;  //in kmh
+            LocalDateTime oldTime = Timestamp.parse(position.timestamp);
+            LocalDateTime newTime = Timestamp.parse(newPosition.timestamp);
+
+            Double speed;
+
+            if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
+                System.out.println("Old tuple is not older than new one!");
+
+                // since it is not meaningful to compute the speed in this case, just use a default value of 0.0
+                speed = 0.0;
+            } else {
+                Double distance = this.distance(newTuple, position.latitude, position.longitude); // in km
+                Double time = this.time(position.timestamp, newPosition.timestamp); //in hours
+                speed = distance / time;  //in kmh
+            }
 
             collector.emit(new Values(id, newPosition.timestamp, newPosition.latitude, newPosition.longitude, speed));
         }

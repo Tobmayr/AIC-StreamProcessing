@@ -1,8 +1,11 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+
+import java.time.LocalDateTime;
 
 public class CalculateAverageSpeed extends LastState<CalculateAverageSpeed.TaxiAvgSpeed> {
 
@@ -32,9 +35,27 @@ public class CalculateAverageSpeed extends LastState<CalculateAverageSpeed.TaxiA
             newAvgSpeed.avgSpeed = 0d;
             newAvgSpeed.hours = 0d;
         } else {
-            Double time = this.time(oldAvgSpeed.lastTimestamp, newAvgSpeed.lastTimestamp); //in hours
-            newAvgSpeed.avgSpeed = (oldAvgSpeed.avgSpeed*oldAvgSpeed.hours + speed*time) / (oldAvgSpeed.hours + time);
+            LocalDateTime oldTime = Timestamp.parse(oldAvgSpeed.lastTimestamp);
+            LocalDateTime newTime = Timestamp.parse(newAvgSpeed.lastTimestamp);
+
+            Double time;
+
+            if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
+                System.out.println("Old tuple is not older than new one!");
+
+                // since it is not meaningful to compute the time in this case, just use a default value of 0.0
+                time = 0.0;
+            } else {
+                time = this.time(oldAvgSpeed.lastTimestamp, newAvgSpeed.lastTimestamp); //in hours
+            }
+
             newAvgSpeed.hours = oldAvgSpeed.hours + time;
+
+            if (Double.compare(newAvgSpeed.hours, 0.0) == 0) {
+                newAvgSpeed.avgSpeed = 0.0;
+            } else {
+                newAvgSpeed.avgSpeed = (oldAvgSpeed.avgSpeed*oldAvgSpeed.hours + speed*time) / newAvgSpeed.hours;
+            }
 
             collector.emit(new Values(id, newAvgSpeed.lastTimestamp, latitude, longitude, speed, newAvgSpeed.avgSpeed));
         }
