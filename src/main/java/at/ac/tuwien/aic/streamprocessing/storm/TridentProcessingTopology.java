@@ -2,9 +2,7 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateAverageSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.*;
 import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -17,6 +15,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
+import redis.clients.jedis.Jedis;
 
 public class TridentProcessingTopology {
     private static final String SPOUT_ID = "kafka-spout";
@@ -46,7 +45,8 @@ public class TridentProcessingTopology {
         this.distanceTupleListener = null;
     }
 
-    public TridentProcessingTopology(String topic, String redisHost, int redisPort, BaseFilter speedTupleListener, BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
+    public TridentProcessingTopology(String topic, String redisHost, int redisPort, BaseFilter speedTupleListener, BaseFilter avgSpeedTupleListener,
+            BaseFilter distanceTupleListener) {
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
@@ -65,12 +65,21 @@ public class TridentProcessingTopology {
         try {
             cluster.shutdown();
             stopKafka();
+            cleanUpRedis();
         } catch (Exception e) {
             System.out.println("Failed to stop cluster.");
             e.printStackTrace();
 
             System.exit(1);
         }
+    }
+
+    private void cleanUpRedis() {
+        Jedis jedis = new Jedis(redisHost, redisPort);
+        jedis.connect();
+        jedis.flushDB();
+        jedis.disconnect();
+        jedis.close();
     }
 
     private void startKafka() {
@@ -108,42 +117,33 @@ public class TridentProcessingTopology {
 
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
-
         // setup topology
         Stream inputStream = topology.newStream(SPOUT_ID, spout);
 
         // setup speed aggregator
-        Stream speedStream = inputStream
-                .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS)
-                .toStream();
+        Stream speedStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS).toStream();
 
         if (speedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedTupleListener);
         }
 
         // setup average speed aggregator
-        speedStream = speedStream
-                .partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS)
-                .toStream();
+        speedStream = speedStream.partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS).toStream();
 
         if (avgSpeedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
         }
 
-        // TODO: enable
-        // speedStream.each(taxiFieldsWithAvgSpeed, new StoreInformation(OperatorType.AVERGAGE_SPEED));
+        speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
 
         // setup distance aggregator
-        Stream distanceStream = inputStream
-                .partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
+        Stream distanceStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
 
         if (distanceTupleListener != null) {
-            distanceStream = distanceStream.toStream()
-                    .each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
+            distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
         }
 
-        // TODO: enable
-        // distanceStream.each(taxiFieldsWithDistance, new StoreInformation(OperatorType.DISTANCE));
+        distanceStream.each(TaxiFields.BASE_DISTANCE_FIELDS, new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
 
         return topology.build();
     }
@@ -175,16 +175,14 @@ public class TridentProcessingTopology {
         cluster.submitTopology("stream-processing", conf, build());
     }
 
-    public static TridentProcessingTopology createWithListeners(BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener) throws Exception {
-        return new TridentProcessingTopology(
-                "taxi", "localhost", 6379,
-                speedListener, avgSpeedListener, distanceListener);
+    public static TridentProcessingTopology createWithListeners(BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener)
+            throws Exception {
+        return new TridentProcessingTopology("taxi", "localhost", 6379, speedListener, avgSpeedListener, distanceListener);
     }
 
-    public static TridentProcessingTopology createWithTopicAndListeners(String topic, BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener) throws Exception {
-        return new TridentProcessingTopology(
-                topic, "localhost", 6379,
-                speedListener, avgSpeedListener, distanceListener);
+    public static TridentProcessingTopology createWithTopicAndListeners(String topic, BaseFilter speedListener, BaseFilter avgSpeedListener,
+            BaseFilter distanceListener) throws Exception {
+        return new TridentProcessingTopology(topic, "localhost", 6379, speedListener, avgSpeedListener, distanceListener);
     }
 
     public static void main(String[] args) throws Exception {
@@ -196,7 +194,7 @@ public class TridentProcessingTopology {
         topology.submitLocalCluster();
 
         try {
-            Thread.sleep(60* 1000);
+            Thread.sleep(60 * 1000);
         } catch (InterruptedException e) {
 
         }

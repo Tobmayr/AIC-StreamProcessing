@@ -6,36 +6,29 @@ import org.apache.storm.trident.tuple.TridentTuple;
 import redis.clients.jedis.Jedis;
 
 public class StoreInformation extends BaseFilter {
-    private static final String REDIS_HOST = "localhost";
-    private static final int REDIS_PORT = 6379;
+    private final String redisHost;
+    private final int redisPort;
 
-    public enum OperatorType {
-        AVERGAGE_SPEED, DISTANCE
-    }
+    private InfoType infoType;
 
-    private OperatorType type;
-
-    public StoreInformation(OperatorType type) {
-        this.type = type;
+    public StoreInformation(InfoType infoType, String redisHost, int redisPort) {
+        this.infoType = infoType;
+        this.redisHost = redisHost;
+        this.redisPort = redisPort;
 
     }
 
     @Override
     public boolean isKeep(TridentTuple tuple) {
-        String key = "", value = "";
 
-        if (type.equals(OperatorType.AVERGAGE_SPEED)) {
-            key = "" + tuple.getIntegerByField("id") + "_avg";
-            value = "" + tuple.getDoubleByField("avgSpeed");
-        } else if (type.equals(OperatorType.DISTANCE)) {
-            key = "" + tuple.getIntegerByField("id") + "_dist";
-            value = "" + tuple.getDoubleByField("distance");
-        }
+        String key = "", value = "";
+        key = "" + tuple.getIntegerByField("id") + infoType.getKeyPrefix();
+        value = "" + tuple.getDoubleByField(infoType.getFieldName());
         if (!key.isEmpty() && !value.isEmpty()) {
-            Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT);
+            Jedis jedis = new Jedis(redisHost, redisPort);
             jedis.set(key, value);
             jedis.close();
         }
-        return false;
+        return true;
     }
 }
