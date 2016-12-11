@@ -116,8 +116,9 @@ create table taxiData(id integer, timestamp datetime, lat decimal, long decimal)
 
 # 3. Output query to file
 sqlite3.exe -csv taxiData "SELECT * FROM taxiData ORDER BY 2" > testData_merged_sorted.csv
+
 ```
-Redis Deskop Managaer
+Redis Deskop Manager
 ---------
 Simple UI tool for managing redis instances.
 ```
