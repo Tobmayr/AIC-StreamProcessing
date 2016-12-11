@@ -16,6 +16,9 @@ import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
 import redis.clients.jedis.Jedis;
+import redis.embedded.RedisServer;
+
+import java.io.IOException;
 
 public class TridentProcessingTopology {
     private static final String SPOUT_ID = "kafka-spout";
@@ -30,6 +33,7 @@ public class TridentProcessingTopology {
     private final BaseFilter distanceTupleListener;
 
     private LocalKafkaInstance localKafkaInstance;
+    private RedisServer localRedisServer;
     private TridentTopology topology;
     private LocalCluster cluster;
 
@@ -66,6 +70,7 @@ public class TridentProcessingTopology {
             cluster.shutdown();
             stopKafka();
             cleanUpRedis();
+            stopRedisServer();
         } catch (Exception e) {
             System.out.println("Failed to stop cluster.");
             e.printStackTrace();
@@ -74,12 +79,35 @@ public class TridentProcessingTopology {
         }
     }
 
+    private void stopRedisServer() {
+        localRedisServer.stop();
+    }
+
+    private void startRedis() {
+        try {
+            localRedisServer = new RedisServer(redisPort);
+            localRedisServer.start();
+        } catch (Exception e) {
+            System.out.println("Caught exception while starting redis. Aborting");
+            e.printStackTrace();
+
+            System.exit(1);
+        }
+    }
+
     private void cleanUpRedis() {
-        Jedis jedis = new Jedis(redisHost, redisPort);
-        jedis.connect();
-        jedis.flushDB();
-        jedis.disconnect();
-        jedis.close();
+        try {
+            Jedis jedis = new Jedis(redisHost, redisPort);
+            jedis.connect();
+            jedis.flushDB();
+            jedis.disconnect();
+            jedis.close();
+        } catch (Exception e) {
+            System.out.println("Caught exception while cleaning up redis database");
+            e.printStackTrace();
+
+            System.exit(1);
+        }
     }
 
     private void startKafka() {
@@ -170,6 +198,7 @@ public class TridentProcessingTopology {
         conf.setMaxTaskParallelism(1);
 
         startKafka();
+        startRedis();
 
         cluster = new LocalCluster();
         cluster.submitTopology("stream-processing", conf, build());
