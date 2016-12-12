@@ -103,6 +103,12 @@ task runDataprovider(type: JavaExec) {
     args "./testdata/taxi_data.csv", "taxi", "10"
 }
 
+task runRedisMonitor(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.cli.RedisMonitor"
+    args
+}
+
 task stormJar(type: Jar) {
     dependsOn configurations.runtime
     from {
