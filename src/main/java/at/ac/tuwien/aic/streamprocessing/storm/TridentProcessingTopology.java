@@ -18,8 +18,6 @@ import org.apache.storm.trident.operation.builtin.Debug;
 import redis.clients.jedis.Jedis;
 import redis.embedded.RedisServer;
 
-import java.io.IOException;
-
 public class TridentProcessingTopology {
     private static final String SPOUT_ID = "kafka-spout";
 
