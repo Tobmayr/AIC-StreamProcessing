@@ -15,10 +15,14 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.embedded.RedisServer;
 
 public class TridentProcessingTopology {
+    private final Logger logger = LoggerFactory.getLogger(TridentProcessingTopology.class);
+
     private static final String SPOUT_ID = "kafka-spout";
 
     private String topic;
@@ -70,9 +74,7 @@ public class TridentProcessingTopology {
             stopKafka();
             stopRedisServer();
         } catch (Exception e) {
-            System.out.println("Failed to stop cluster.");
-            e.printStackTrace();
-
+            logger.error("Failed to stop cluster.", e);
             System.exit(1);
         }
     }
@@ -86,9 +88,7 @@ public class TridentProcessingTopology {
             localRedisServer = new RedisServer(redisPort);
             localRedisServer.start();
         } catch (Exception e) {
-            System.out.println("Caught exception while starting redis. Aborting");
-            e.printStackTrace();
-
+            logger.error("Caught exception while starting redis. Aborting", e);
             System.exit(1);
         }
     }
@@ -101,8 +101,7 @@ public class TridentProcessingTopology {
             jedis.disconnect();
             jedis.close();
         } catch (Exception e) {
-            System.out.println("Caught exception while cleaning up redis database. Ignoring");
-            e.printStackTrace();
+            logger.error("Caught exception while cleaning up redis database. Ignoring", e);
         }
     }
 
@@ -112,9 +111,7 @@ public class TridentProcessingTopology {
         try {
             localKafkaInstance.start();
         } catch (Exception e) {
-            System.out.println("Caught exception while starting kafka. Aborting");
-            e.printStackTrace();
-
+            logger.error("Caught exception while starting kafka. Aborting",e);
             System.exit(1);
         }
 
@@ -125,8 +122,7 @@ public class TridentProcessingTopology {
         try {
             localKafkaInstance.stop();
         } catch (Exception e) {
-            System.out.println("Caught exception while stopping kafka. Ignoring.");
-            e.printStackTrace();
+            logger.error("Caught exception while stopping kafka. Ignoring.", e);
         }
     }
 
