@@ -106,7 +106,12 @@ task runDataprovider(type: JavaExec) {
 task runRedisMonitor(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.cli.RedisMonitor"
-    args
+
+}
+
+task runTopology (type: JavaExec){
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.storm.TridentProcessingTopology"
 }
 
 task stormJar(type: Jar) {
