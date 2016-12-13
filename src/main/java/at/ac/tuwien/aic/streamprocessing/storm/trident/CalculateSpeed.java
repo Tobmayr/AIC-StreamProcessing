@@ -4,6 +4,8 @@ import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +18,8 @@ public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
      * speed[1]
      *
      */
+
+    private final Logger logger = LoggerFactory.getLogger(CalculateSpeed.class);
 
     class Position {
         String timestamp;
@@ -37,7 +41,7 @@ public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
             Double speed;
 
             if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
-                System.out.println("Old tuple is not older than new one!");
+                logger.debug("Old tuple is not older than new one!");
 
                 // since it is not meaningful to compute the speed in this case, just use a default value of 0.0
                 speed = 0.0;
@@ -48,6 +52,7 @@ public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
             }
 
             collector.emit(new Values(id, newPosition.timestamp, newPosition.latitude, newPosition.longitude, speed));
+            logger.debug("(speed): [" + id + ", " + newPosition.timestamp + ", " + newPosition.latitude + ", " + newPosition.longitude + ", " + speed + "]");
         }
 
         return newPosition;
