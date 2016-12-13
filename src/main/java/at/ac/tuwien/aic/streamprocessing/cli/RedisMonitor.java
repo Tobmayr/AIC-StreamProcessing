@@ -1,5 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.cli;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.InfoType;
 import redis.clients.jedis.Jedis;
 
 import java.math.RoundingMode;
@@ -43,7 +44,7 @@ public class RedisMonitor {
         Set<Integer> ids = new HashSet<>();
 
         for (String key : jedis.keys("*")) {
-            if (!key.contains("_dist") && !key.contains("_avgSpeed")) {
+            if (!key.endsWith(InfoType.DISTANCE.getKeyPrefix()) && !key.endsWith(InfoType.AVERAGE_SPEED.getKeyPrefix())) {
                 continue;
             }
 
@@ -58,8 +59,8 @@ public class RedisMonitor {
     }
 
     private TaxiData queryTaxi(Integer id) {
-        String distance = jedis.get(id.toString() + "_dist");
-        String averageSpeed = jedis.get(id.toString() + "_avgSpeed");
+        String distance = jedis.get(id.toString() + InfoType.DISTANCE.getKeyPrefix());
+        String averageSpeed = jedis.get(id.toString() + InfoType.AVERAGE_SPEED.getKeyPrefix());
 
         return new TaxiData(
                 id.toString(),
