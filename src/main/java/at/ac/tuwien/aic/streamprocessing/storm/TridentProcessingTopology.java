@@ -65,9 +65,9 @@ public class TridentProcessingTopology {
         stopped = true;
 
         try {
+            cleanUpRedis();
             cluster.shutdown();
             stopKafka();
-            cleanUpRedis();
             stopRedisServer();
         } catch (Exception e) {
             System.out.println("Failed to stop cluster.");
@@ -101,10 +101,8 @@ public class TridentProcessingTopology {
             jedis.disconnect();
             jedis.close();
         } catch (Exception e) {
-            System.out.println("Caught exception while cleaning up redis database");
+            System.out.println("Caught exception while cleaning up redis database. Ignoring");
             e.printStackTrace();
-
-            System.exit(1);
         }
     }
 
@@ -127,10 +125,8 @@ public class TridentProcessingTopology {
         try {
             localKafkaInstance.stop();
         } catch (Exception e) {
-            System.out.println("Caught exception while stopping kafka. Aborting");
+            System.out.println("Caught exception while stopping kafka. Ignoring.");
             e.printStackTrace();
-
-            System.exit(1);
         }
     }
 
@@ -220,12 +216,6 @@ public class TridentProcessingTopology {
         TridentProcessingTopology topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
         topology.submitLocalCluster();
 
-        try {
-            Thread.sleep(60 * 1000);
-        } catch (InterruptedException e) {
-
-        }
-
-        topology.stop();
+        Runtime.getRuntime().addShutdownHook(new Thread(topology::stop));
     }
 }

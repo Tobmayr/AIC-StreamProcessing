@@ -11,10 +11,17 @@ repositories {
     mavenCentral()
 }
 configurations.all {
-    exclude group: 'ch.qos.logback', module: 'logback-classic'
-    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.name == 'slf4j-log4j12') {
+            details.useTarget "org.slf4j:log4j-over-slf4j:1.7.21"
+        }
+    }
 
-
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.name == 'log4j-slf4j-impl') {
+            details.useTarget "org.slf4j:log4j-over-slf4j:1.7.21"
+        }
+    }
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
         if (details.requested.name == 'log4j') {
             details.useTarget "org.slf4j:log4j-over-slf4j:1.7.21"
@@ -101,6 +108,17 @@ task runDataprovider(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DataProvider"
     args "./testdata/taxi_data.csv", "taxi", "10"
+}
+
+task runRedisMonitor(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.cli.RedisMonitor"
+
+}
+
+task runTopology (type: JavaExec){
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.storm.TridentProcessingTopology"
 }
 
 task stormJar(type: Jar) {
