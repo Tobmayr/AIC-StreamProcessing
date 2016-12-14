@@ -15,7 +15,6 @@ public class DistanceTupleListener extends TridentTupleListener<DistanceTupleLis
     protected DistanceTuple transformTuple(TridentTuple tuple) {
         return new DistanceTuple(
                 tuple.getIntegerByField("id"),
-                Timestamp.parse(tuple.getStringByField("timestamp")),
                 tuple.getDoubleByField("latitude"),
                 tuple.getDoubleByField("longitude"),
                 tuple.getDoubleByField("distance")
@@ -25,8 +24,8 @@ public class DistanceTupleListener extends TridentTupleListener<DistanceTupleLis
     public static class DistanceTuple extends TridentTupleListener.Tuple {
         public double distance;
 
-        public DistanceTuple(int id, LocalDateTime timestamp, double latitude, double longitude, double distance) {
-            super(id, timestamp, latitude, longitude);
+        public DistanceTuple(Integer id, double latitude, double longitude, double distance) {
+            super(id, null, latitude, longitude);
             this.distance = distance;
         }
     }

@@ -1,11 +1,13 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.task.IMetricsContext;
 import org.apache.storm.trident.state.State;
 
 import java.util.Map;
 
-public abstract class StateFactory implements org.apache.storm.trident.state.StateFactory {
+public abstract class StateFactory<T extends StateObject> implements org.apache.storm.trident.state.StateFactory {
     private final String type;
     private final String redisHost;
     private final int redisPort;
@@ -18,8 +20,12 @@ public abstract class StateFactory implements org.apache.storm.trident.state.Sta
 
     @Override
     public State makeState(Map conf, IMetricsContext metrics, int partitionIndex, int numPartitions) {
-        return create(type, redisHost, redisPort);
+        return create();
     }
 
-    protected abstract State create(String type, String redisHost, int redisPort);
+    public RedisState<T> create() {
+        return new RedisState<T>(type, redisHost, redisPort, createMapper());
+    }
+
+    protected abstract StateObjectMapper<T> createMapper();
 }

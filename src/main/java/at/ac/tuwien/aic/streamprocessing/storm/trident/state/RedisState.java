@@ -1,35 +1,42 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.state.State;
+import org.apache.storm.trident.tuple.TridentTuple;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class RedisState<T, M extends RedisStateObjectMapper<T>> implements State {
+public class RedisState<T extends StateObject> implements State {
 
     private final String TRIDENT_STATE_REDIS_PREFIX = "tridentState";
     private final String state_key;
 
     private final String redisHost;
     private final int redisPort;
-    private final M mapper;
+    private final StateObjectMapper<T> mapper;
 
-    public RedisState(String name, String redisHost, int redisPort, M mapper) {
+    public RedisState(String name, String redisHost, int redisPort, StateObjectMapper<T> mapper) {
         this.state_key = TRIDENT_STATE_REDIS_PREFIX + ":" + name;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
         this.mapper = mapper;
     }
 
+    public StateObjectMapper<T> getMapper() {
+        return mapper;
+    }
+
     @Override
     public void beginCommit(Long txid) {
-        // TODO
+        // ignore
     }
 
     @Override
     public void commit(Long txid) {
-        // TODO
+        // ignore
     }
 
     private void set(Jedis jedis, Integer taxiId, T state) {
@@ -70,5 +77,11 @@ public abstract class RedisState<T, M extends RedisStateObjectMapper<T>> impleme
         }
 
         jedis.close();
+    }
+
+    protected List<T> transformTuples(List<TridentTuple> tuples) {
+        return tuples.stream()
+                .map(getMapper()::fromTuple)
+                .collect(Collectors.toList());
     }
 }

@@ -1,7 +1,15 @@
 package at.ac.tuwien.aic.streamprocessing.trident;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.Haversine;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedStateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceStateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedStateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -29,9 +37,9 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
         wait(15);
 
-        assertThat(collectSpeed(1), contains(0.0, 0.0, 0.0));
-        assertThat(collectAverageSpeed(1), contains(0.0, 0.0, 0.0));
-        assertThat(collectDistance(1), contains(0.0, 0.0, 0.0));
+        assertThat(collectSpeed(1), contains(0.0, 0.0));
+        assertThat(collectAverageSpeed(1), contains(0.0, 0.0));
+        assertThat(collectDistance(1), contains(0.0, 0.0));
     }
 
     @Test
@@ -52,9 +60,9 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
         double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
 
-        assertThat(collectSpeed(1), contains(0.0, dist1, dist2));
-        assertThat(collectAverageSpeed(1), contains(0.0, dist1, dist2));
-        assertThat(collectDistance(1), contains(0.0, dist1, dist1 + dist2));
+        assertThat(collectSpeed(1), contains(dist1, dist2));
+        assertThat(collectAverageSpeed(1), contains(dist1, dist2));
+        assertThat(collectDistance(1), contains(dist1, dist1 + dist2));
     }
 
     @Test
@@ -78,13 +86,48 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
         double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
 
-        assertThat(collectSpeed(1), contains(0.0, dist1, dist2));
-        assertThat(collectAverageSpeed(1), contains(0.0, dist1, dist2));
-        assertThat(collectDistance(1), contains(0.0, dist1, dist1 + dist2));
+        assertThat(collectSpeed(1), contains(dist1, dist2));
+        assertThat(collectAverageSpeed(1), contains(dist1, dist2));
+        assertThat(collectDistance(1), contains(dist1, dist1 + dist2));
 
-        assertThat(collectSpeed(2), contains(0.0, dist1, dist2));
-        assertThat(collectAverageSpeed(2), contains(0.0, dist1, dist2));
-        assertThat(collectDistance(2), contains(0.0, dist1, dist1 + dist2));
+        assertThat(collectSpeed(2), contains(dist1, dist2));
+        assertThat(collectAverageSpeed(2), contains(dist1, dist2));
+        assertThat(collectDistance(2), contains(dist1, dist1 + dist2));
+    }
+
+    @Test
+    public void test_withState_yieldsCorrectValues() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+
+        RedisState distanceState = new DistanceStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        distanceState.setAll(Arrays.asList(1), Arrays.asList(new DistanceState(10.5, 10.0, 42.0)));
+
+        RedisState speedState = new SpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        speedState.setAll(Arrays.asList(1), Arrays.asList(new SpeedState(Timestamp.toString(now.minusMinutes(60)), 10.5, 10.0, 50.0)));
+
+        RedisState avgSpeedState = new AvgSpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        avgSpeedState.setAll(Arrays.asList(1), Arrays.asList(new AverageSpeedState(1, 50.0)));
+
+        wait(5);
+
+        // model a moving taxi
+        List<TaxiEntry> taxis = Arrays.asList(
+                new TaxiEntry(1, now, 10.0, 10.0),
+                new TaxiEntry(1, now.plusMinutes(60), 10.5, 10.0)
+        );
+
+        emitTaxis(taxis);
+
+        wait(15);
+
+        double initialDistance = 42.0;
+        double initialAvgSpeed = 50.0;
+        double dist1 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
+        double dist2 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
+
+        assertThat(collectSpeed(1), contains(dist1, dist2));
+        assertThat(collectAverageSpeed(1), contains((initialAvgSpeed + dist1) / 2.0, (initialAvgSpeed + dist1 + dist2) / 3.0));
+        assertThat(collectDistance(1), contains(initialDistance + dist1, initialDistance + dist1 + dist2));
     }
 
     @Test

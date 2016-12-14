@@ -1,83 +1,59 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.Position;
-import org.apache.storm.trident.operation.TridentCollector;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedStateMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
-public class CalculateSpeed extends LastState<Position> {
-    /**
-     * The _Calculate speed_ operator calculates the speed between two successive locations for each taxi, whereas the
-     * distance between two locations can be derived by the Haversine formula{4}. This operator represents a stateful
-     * operator because it is required to always remember the last location of the taxi to calculate the current
-     * speed[1]
-     *
-     */
+public class CalculateSpeed extends Aggregator<SpeedState> {
 
-    private final Logger logger = LoggerFactory.getLogger(CalculateSpeed.class);
-
-    class PositionTuple {
-        Double latitude;
-        Double longitude;
-        String timestamp;
-        LocalDateTime ts;
-        Position persisted;
-
-        PositionTuple(TridentTuple tuple) {
-            this.timestamp = tuple.getStringByField("timestamp");
-            this.ts = Timestamp.parse(this.timestamp);
-            this.latitude = tuple.getDoubleByField("latitude");
-            this.longitude = tuple.getDoubleByField("longitude");
-            this.persisted = (Position) tuple.getValueByField("positionArray");
-        }
-
-        Position getPosition () {
-            Position position = new Position();
-            position.timestamp = this.timestamp;
-            position.latitude = this.latitude;
-            position.longitude = this.longitude;
-            return position;
-        }
+    public CalculateSpeed() {
+        super(true);
     }
 
-    protected Position calculate(TridentTuple newTuple, Position previous, TridentCollector collector) {
-        Integer id = newTuple.getIntegerByField("id"); //test
-        PositionTuple input = new PositionTuple(newTuple);
+    private StateObjectMapper<SpeedState> mapper;
 
-        if (previous == null && input.persisted != null) {
-            previous = input.persisted;
-        }
+    @Override
+    public void prepare(Map conf, TridentOperationContext context) {
+        super.prepare(conf, context);
 
-        if (previous == null && input.persisted == null) {
-            previous = input.getPosition();
-        }
+        this.mapper = new SpeedStateMapper();
+    }
 
-        // act like there has already been a tuple
-        previous.timestamp = previous.timestamp == null ? input.timestamp : previous.timestamp;
-        previous.latitude = previous.latitude == null ? input.latitude : previous.latitude;
-        previous.longitude = previous.longitude == null ? input.longitude : previous.longitude;
+    @Override
+    protected SpeedState compute(SpeedState previous, TridentTuple tuple) {
+        String timestamp = tuple.getStringByField("timestamp");
+        Double currentLatitude = tuple.getDoubleByField("latitude");
+        Double currentLongitude = tuple.getDoubleByField("longitude");
 
+        Double distance = Haversine.haversine(
+                previous.getLatitude(), previous.getLongitude(),
+                currentLatitude, currentLongitude);
 
-        Double distance = this.distance(newTuple, previous.latitude, previous.longitude); // in km
-        Double time = this.time(previous.timestamp, input.timestamp); //in hours
+        LocalDateTime startTime = Timestamp.parse(previous.getTimestamp());
+        LocalDateTime endTime = Timestamp.parse(timestamp);
+
+        Double time = ChronoUnit.MILLIS.between(startTime, endTime) / (60. * 60.0 * 1000.0);
+
         Double speed;
-
         if (Double.compare(time, 0.0) == 0) {
             speed = 0.0;
         } else {
-            speed = distance / time;  //in kmh
+            speed = distance / time;  // in kmh
         }
 
-        collector.emit(new Values(id, input.timestamp, input.latitude, input.longitude, speed, previous));
-
-        return input.getPosition();
+        return new SpeedState(timestamp, currentLatitude, currentLongitude, speed);
     }
 
+    @Override
+    protected StateObjectMapper<SpeedState> getMapper() {
+        return mapper;
+    }
 }
-

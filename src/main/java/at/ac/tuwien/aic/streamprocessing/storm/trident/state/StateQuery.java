@@ -1,15 +1,27 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.operation.TridentCollector;
+import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.state.BaseQueryFunction;
 import org.apache.storm.trident.state.State;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Values;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class StateQuery<ST extends State, T> extends BaseQueryFunction<ST, T> {
+public abstract class StateQuery<ST extends RedisState<T>, T extends StateObject> extends BaseQueryFunction<ST, T> {
+
+    private StateObjectMapper<T> mapper;
+
+    @Override
+    public void prepare(Map conf, TridentOperationContext context) {
+        super.prepare(conf, context);
+
+        mapper = createMapper();
+    }
 
     @Override
     public List<T> batchRetrieve(ST state, List<TridentTuple> args) {
@@ -17,21 +29,19 @@ public abstract class StateQuery<ST extends State, T> extends BaseQueryFunction<
                 .map(t -> t.getIntegerByField("id"))
                 .collect(Collectors.toList());
 
-        return query(state, ids);
+        return state.getAll(ids);
     }
 
     @Override
     public void execute(TridentTuple tuple, T result, TridentCollector collector) {
         if (result == null) {
             // no state yet, just emit initial value
-            // TODO: suppress emit?
-            collector.emit(new Values(getInitial()));
+            collector.emit(mapper.createInitialStateTuple());
         } else {
             // just emit the produced value
-            collector.emit(new Values(result));
+            collector.emit(mapper.toStateTuple(result));
         }
     }
 
-    protected abstract T getInitial();
-    protected abstract List<T> query(ST state, List<Integer> ids);
+    protected abstract StateObjectMapper<T> createMapper();
 }
