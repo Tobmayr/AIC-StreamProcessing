@@ -52,23 +52,17 @@ public class CalculateSpeed extends LastState<Position> {
         previous.latitude = previous.latitude == null ? input.latitude : previous.latitude;
         previous.longitude = previous.longitude == null ? input.longitude : previous.longitude;
 
-        LocalDateTime oldTime = Timestamp.parse(previous.timestamp);
-        LocalDateTime newTime = Timestamp.parse(input.timestamp);
+        Double distance = this.distance(newTuple, previous.latitude, previous.longitude); // in km
+        Double time = this.time(previous.timestamp, input.timestamp); //in hours
+        Double speed;
 
-            Double speed;
+        if (Double.compare(time, 0.0) == 0) {
+            speed = 0.0;
+        } else {
+            speed = distance / time;  //in kmh
+        }
 
-            if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
-//                System.out.println("Old tuple is not older than new one!");
-
-                // since it is not meaningful to compute the speed in this case, just use a default value of 0.0
-                speed = 0.0;
-            } else {
-                Double distance = this.distance(newTuple, previous.latitude, previous.longitude); // in km
-                Double time = this.time(previous.timestamp, input.timestamp); //in hours
-                speed = distance / time;  //in kmh
-            }
-
-            collector.emit(new Values(id, input.timestamp, input.latitude, input.longitude, speed, previous));
+        collector.emit(new Values(id, input.timestamp, input.latitude, input.longitude, speed, previous));
 
 
         return input.getPosition();

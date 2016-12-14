@@ -102,7 +102,18 @@ public class DataProvider {
                 return new Batch(entries, entry);
             }
 
-            entries.add(entry);
+            long sameEntryCount = entries.stream()
+                    .filter(e -> e.getTaxiId() == entry.getTaxiId())
+                    .filter(e -> e.getTimestamp().isEqual(entry.getTimestamp()))
+                    .count();
+
+            if (sameEntryCount == 0) {
+                entries.add(entry);
+            } else {
+                // duplicate entries for one taxi at the same moment
+                // disregard it as it will computing meaningful values impossible
+                logger.debug("Filtered same-time entry for taxi " + entry.getTaxiId() + ": " + entry.toString());
+            }
         }
 
         return new Batch(entries, null);

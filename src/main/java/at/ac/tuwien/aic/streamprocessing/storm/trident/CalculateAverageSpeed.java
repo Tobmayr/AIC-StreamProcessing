@@ -43,19 +43,8 @@ public class CalculateAverageSpeed extends LastState<AvgSpeed> {
             newAvgSpeed.avgSpeed = 0d;
             newAvgSpeed.hours = 0d;
         } else {
-            LocalDateTime oldTime = Timestamp.parse(oldAvgSpeed.lastTimestamp);
-            LocalDateTime newTime = Timestamp.parse(newAvgSpeed.lastTimestamp);
+            Double time = this.time(oldAvgSpeed.lastTimestamp, newAvgSpeed.lastTimestamp); //in hours
 
-            Double time;
-
-            if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
-//                System.out.println("Old tuple is not older than new one!");
-
-                // since it is not meaningful to compute the time in this case, just use a default value of 0.0
-                time = 0.0;
-            } else {
-                time = this.time(oldAvgSpeed.lastTimestamp, newAvgSpeed.lastTimestamp); //in hours
-            }
 
             newAvgSpeed.hours = oldAvgSpeed.hours + time;
 
