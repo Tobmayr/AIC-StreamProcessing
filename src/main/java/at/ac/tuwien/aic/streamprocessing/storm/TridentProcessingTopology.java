@@ -3,6 +3,9 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.*;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedDBFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedUpdater;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceDBFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceUpdater;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.QueryDistance;
@@ -167,38 +170,46 @@ public class TridentProcessingTopology {
                 ;
         speedStream.partitionPersist( new SpeedDBFactory("speed",redisHost,redisPort), TaxiFields.ID_POSITIONARRAY, new SpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
 
+        if (speedTupleListener != null) {
+            speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedTupleListener);
+        }
+
+        // setup average speed aggregator
+        //speedStream = speedStream.partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS).toStream();
+        TridentState avgSpeed = topology.newStaticState(new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort));
+        Stream avgSpeedStream = speedStream
+                .stateQuery(avgSpeed, ID, new AvgSpeedQuery(), new Fields("avgSpeedObject"))
+                .peek(new Peeker("avgSpeedBefore"))
+                .partitionAggregate( TaxiFields.BASE_SPEED_AVGSPEEDOBJECT,  new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_AVGSPEEDOBJECT)
+                .toStream()
+                .peek(new Peeker("avgSpeedAfter"))
+                ;
+        avgSpeedStream.partitionPersist( new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort), TaxiFields.ID_AVGSPEEDOBJECT, new AvgSpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
 
 
-//        if (speedTupleListener != null) {
-//            speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedTupleListener);
-//        }
-//
-//        // setup average speed aggregator
-//        speedStream = speedStream.partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS).toStream();
-//
-//        if (avgSpeedTupleListener != null) {
-//            speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
-//        }
-//
-//        speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
+        if (avgSpeedTupleListener != null) {
+            avgSpeedStream = avgSpeedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
+        }
 
-        // TODO
-//        // setup distance aggregator
-//        TridentState distance = topology.newStaticState(new DistanceDBFactory("distance",redisHost,redisPort));
-//        Stream distanceStream = inputStream
-//                .stateQuery(distance, ID, new QueryDistance(), DISTANCEARRAY)
-//                .peek(new Peeker("distanceBefore"))
-//                .partitionAggregate( TaxiFields.BASE_DISTARRAY,  new CalculateDistance(), BASE_DIST_DISTARR)
-//                .toStream()
-//                .peek(new Peeker("distanceAfter"))
-//                ;
-//        distanceStream.partitionPersist( new DistanceDBFactory("distance",redisHost,redisPort), ID_DISTARR, new DistanceUpdater()).newValuesStream().peek(new Peeker("Persistence"));
-//
-//        if (distanceTupleListener != null) {
-//            distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
-//        }
-//
-//        distanceStream.each(TaxiFields.BASE_DISTANCE_FIELDS, new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
+        avgSpeedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
+
+
+        // setup distance aggregator
+        TridentState distance = topology.newStaticState(new DistanceDBFactory("distance",redisHost,redisPort));
+        Stream distanceStream = inputStream
+                .stateQuery(distance, ID, new QueryDistance(), DISTANCEARRAY)
+                .peek(new Peeker("distanceBefore"))
+                .partitionAggregate( TaxiFields.BASE_DISTARRAY,  new CalculateDistance(), BASE_DIST_DISTARR)
+                .toStream()
+                .peek(new Peeker("distanceAfter"))
+                ;
+        distanceStream.partitionPersist( new DistanceDBFactory("distance",redisHost,redisPort), ID_DISTARR, new DistanceUpdater()).newValuesStream().peek(new Peeker("Persistence"));
+
+        if (distanceTupleListener != null) {
+            distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
+        }
+
+        distanceStream.each(TaxiFields.BASE_DISTANCE_FIELDS, new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
 
         return topology.build();
     }

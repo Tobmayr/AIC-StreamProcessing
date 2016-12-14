@@ -4,6 +4,10 @@ import org.apache.storm.tuple.Fields;
 
 public class TaxiFields {
 
+    public static Fields BASE_SPEED_AVGSPEEDOBJECT = new Fields("id", "timestamp", "latitude", "longitude", "speed", "avgSpeedObject");
+    public static Fields BASE_SPEED_AVG_AVGSPEEDOBJECT = new Fields("id", "timestamp", "latitude", "longitude", "speed", "avgSpeed", "avgSpeedObject");
+    public static Fields ID_AVGSPEEDOBJECT = new Fields("id", "avgSpeedObject") ;
+
 
     public static Fields BASE_DISTARRAY = new Fields("id", "timestamp", "latitude", "longitude", "distanceArray");
     public static Fields BASE_FIELDS = new Fields("id", "timestamp", "latitude", "longitude");
