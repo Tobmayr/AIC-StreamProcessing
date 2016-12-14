@@ -8,11 +8,15 @@ import org.apache.storm.kafka.KeyValueScheme;
 import org.apache.storm.kafka.StringScheme;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
 public class TaxiEntryKeyValueScheme implements KeyValueScheme {
+
+    private final Logger logger = LoggerFactory.getLogger(TaxiEntryKeyValueScheme.class);
 
     @Override
     public List<Object> deserializeKeyAndValue(ByteBuffer key, ByteBuffer value) {
@@ -28,6 +32,12 @@ public class TaxiEntryKeyValueScheme implements KeyValueScheme {
             // failed to deserialize
             return null;
         }
+
+        logger.debug("Emitting ({}, {}, {}, {})",
+                entry.getTaxiId(),
+                Timestamp.toString(entry.getTimestamp()),
+                entry.getLatitude(),
+                entry.getLongitude());
 
         return new Values(
                 entry.getTaxiId(),
