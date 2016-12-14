@@ -6,18 +6,20 @@ import redis.clients.jedis.Jedis;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class RedisState<T> implements State {
+public abstract class RedisState<T, M extends RedisStateObjectMapper<T>> implements State {
 
     private final String TRIDENT_STATE_REDIS_PREFIX = "tridentState";
     private final String state_key;
 
     private final String redisHost;
     private final int redisPort;
+    private final M mapper;
 
-    public RedisState(String name, String redisHost, int redisPort) {
+    public RedisState(String name, String redisHost, int redisPort, M mapper) {
         this.state_key = TRIDENT_STATE_REDIS_PREFIX + ":" + name;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
+        this.mapper = mapper;
     }
 
     @Override
@@ -32,7 +34,7 @@ public abstract class RedisState<T> implements State {
 
     private void set(Jedis jedis, Integer taxiId, T state) {
         String key = state_key + ":" + taxiId;
-        String value = serialize(state);
+        String value = mapper.serializeToRedis(state);
         jedis.set(key, value);
     }
 
@@ -41,7 +43,7 @@ public abstract class RedisState<T> implements State {
         if (value == null) {
             return null;
         } else {
-            return parse(value);
+            return mapper.deserializeFromRedis(value);
         }
     }
 
@@ -69,7 +71,4 @@ public abstract class RedisState<T> implements State {
 
         jedis.close();
     }
-
-    protected abstract T parse(String value);
-    protected abstract String serialize(T state);
 }

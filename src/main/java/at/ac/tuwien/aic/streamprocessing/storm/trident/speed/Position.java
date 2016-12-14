@@ -19,19 +19,6 @@ public class Position {
                 '}';
     }
 
-    public String toRedisValue() {
-        return timestamp + ',' + latitude + "," + longitude;
-    }
-
-    public static Position fromRedisValue(String input) {
-        String parts[] = input.split(",");
-        Position position = new Position();
-        position.timestamp = parts[0];
-        position.latitude = Double.parseDouble(parts[1]);
-        position.longitude = Double.parseDouble(parts[2]);
-        return position;
-    }
-
     public String getTimestamp() {
         return timestamp;
     }
