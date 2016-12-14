@@ -63,6 +63,7 @@ public class CalculateDistance extends LastState<CalculateDistance.TaxiDistance>
         distanceArray.add(td.longitude);
         distanceArray.add(td.traveled);
         collector.emit(new Values(id, timestamp, td.latitude, td.longitude, td.traveled, distanceArray));
+        logger.debug("(distance): [" + id + ", " + timestamp + ", " + td.latitude + ", " + td.longitude + ", " + td.toString() + ", " + distanceArray + "]");
 
         return td;
     }

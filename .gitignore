@@ -214,3 +214,6 @@ gradle-app.setting
 
 #Testdata
 /testdata
+
+#logs
+/logs
