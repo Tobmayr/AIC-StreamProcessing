@@ -15,6 +15,6 @@ public class DistanceUpdater extends BaseStateUpdater<DistanceDB> {
             ids.add(t.getInteger(0));
             locations.add( (ArrayList<Double>) t.getValueByField("distanceArray"));
         }
-        state.setLocationsBulk(ids, locations);
+        state.setAll(ids, locations);
     }
 }

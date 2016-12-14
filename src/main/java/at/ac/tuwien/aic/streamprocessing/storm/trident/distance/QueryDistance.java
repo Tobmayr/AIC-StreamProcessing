@@ -22,6 +22,6 @@ public class QueryDistance extends StateQuery<DistanceDB, ArrayList<Double>> {
 
     @Override
     protected List<ArrayList<Double>> query(DistanceDB state, List<Integer> ids) {
-        return state.bulkGetLocations(ids);
+        return state.getAll(ids);
     }
 }

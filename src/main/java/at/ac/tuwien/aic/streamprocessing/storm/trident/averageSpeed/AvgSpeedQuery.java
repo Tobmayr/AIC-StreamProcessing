@@ -18,6 +18,6 @@ public class AvgSpeedQuery extends StateQuery<AvgSpeedDB, AvgSpeed> {
 
     @Override
     protected List<AvgSpeed> query(AvgSpeedDB state, List<Integer> ids) {
-        return state.bulkGetLocations(ids);
+        return state.getAll(ids);
     }
 }

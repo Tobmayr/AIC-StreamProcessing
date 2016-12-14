@@ -20,6 +20,7 @@ public class AvgSpeedUpdater extends BaseStateUpdater<AvgSpeedDB> {
                 locations.add(null);
             }
         }
-        state.setLocationsBulk(ids, locations);
+
+        state.setAll(ids, locations);
     }
 }

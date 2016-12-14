@@ -9,6 +9,6 @@ public class AvgSpeedDBFactory extends at.ac.tuwien.aic.streamprocessing.storm.t
 
     @Override
     protected State create(String type, String redisHost, int redisPort) {
-        return new AvgSpeedDB(type, redisHost, redisPort);
+        return new AvgSpeedDB(redisHost, redisPort);
     }
 }

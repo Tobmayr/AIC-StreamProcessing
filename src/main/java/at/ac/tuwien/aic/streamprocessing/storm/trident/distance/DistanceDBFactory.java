@@ -9,6 +9,6 @@ public class DistanceDBFactory extends at.ac.tuwien.aic.streamprocessing.storm.t
 
     @Override
     protected State create(String type, String redisHost, int redisPort) {
-        return new DistanceDB(type, redisHost, redisPort);
+        return new DistanceDB(redisHost, redisPort);
     }
 }

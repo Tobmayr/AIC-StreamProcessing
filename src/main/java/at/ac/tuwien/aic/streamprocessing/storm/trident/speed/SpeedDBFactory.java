@@ -9,6 +9,6 @@ public class SpeedDBFactory extends at.ac.tuwien.aic.streamprocessing.storm.trid
 
     @Override
     protected State create(String type, String redisHost, int redisPort) {
-        return new SpeedDB(type, redisHost, redisPort);
+        return new SpeedDB(redisHost, redisPort);
     }
 }

@@ -17,6 +17,6 @@ public class SpeedQuery extends StateQuery<SpeedDB, Position> {
 
     @Override
     protected List<Position> query(SpeedDB state, List<Integer> ids) {
-        return state.bulkGetLocations(ids);
+        return state.getAll(ids);
     }
 }
