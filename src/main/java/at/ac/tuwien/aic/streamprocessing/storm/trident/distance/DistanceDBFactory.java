@@ -1,22 +1,14 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.distance;
 
-import org.apache.storm.task.IMetricsContext;
 import org.apache.storm.trident.state.State;
-import org.apache.storm.trident.state.StateFactory;
 
-import java.util.Map;
-
-public class DistanceDBFactory implements StateFactory {
-    private final String redisHost;
-    private final int redisPort;
-    private String type;
-
-    public DistanceDBFactory (String type, String redisHost, int redisPort) {
-        this.type = type;
-        this.redisHost = redisHost;
-        this.redisPort = redisPort;
+public class DistanceDBFactory extends at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory {
+    public DistanceDBFactory(String type, String redisHost, int redisPort) {
+        super(type, redisHost, redisPort);
     }
-    public State makeState(Map conf, IMetricsContext con, int partitionIndex, int numPartitions) {
-        return new DistanceDB(type,redisHost,redisPort);
+
+    @Override
+    protected State create(String type, String redisHost, int redisPort) {
+        return new DistanceDB(type, redisHost, redisPort);
     }
 }
