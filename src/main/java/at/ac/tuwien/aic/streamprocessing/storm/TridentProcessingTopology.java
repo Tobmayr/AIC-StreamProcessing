@@ -3,6 +3,7 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.*;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Peeker;
 import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -12,9 +13,13 @@ import org.apache.storm.kafka.ZkHosts;
 import org.apache.storm.kafka.trident.OpaqueTridentKafkaSpout;
 import org.apache.storm.kafka.trident.TridentKafkaConfig;
 import org.apache.storm.trident.Stream;
+import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
+import org.apache.storm.trident.operation.Consumer;
 import org.apache.storm.trident.operation.builtin.Debug;
+import org.apache.storm.trident.tuple.TridentTuple;
+import org.apache.storm.tuple.Fields;
 import redis.clients.jedis.Jedis;
 import redis.embedded.RedisServer;
 
@@ -159,7 +164,22 @@ public class TridentProcessingTopology {
         speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
 
         // setup distance aggregator
-        Stream distanceStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
+//        Stream distanceStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
+        TridentState distance = topology.newStaticState(new DistanceDBFactory("distance",redisHost,redisPort));
+        Stream distanceStream = inputStream
+                .stateQuery(distance, new Fields("id"), new QueryDistance(), new Fields("distanceArray"))
+                .peek(new Peeker("distanceBefore"))
+                .partitionAggregate(
+                        new Fields("id", "timestamp", "latitude", "longitude","distanceArray"),
+                        new CalculateDistance(),
+                        new Fields("id", "timestamp", "latitude", "longitude","distance","distanceArray"))
+                .toStream()
+                .peek(new Peeker("distanceAfter"))
+                ;
+        distanceStream.partitionPersist(
+                        new DistanceDBFactory("distance",redisHost,redisPort),
+                        new Fields("id", "distanceArray"),
+                        new DistanceUpdater()).newValuesStream().peek(new Peeker("Persistence"));
 
         if (distanceTupleListener != null) {
             distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);
