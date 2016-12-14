@@ -53,7 +53,7 @@ public class CalculateAverageSpeed extends LastState<AvgSpeed> {
             }
 
             collector.emit(new Values(id, newAvgSpeed.lastTimestamp, latitude, longitude, speed, newAvgSpeed.avgSpeed,newAvgSpeed));
-            logger.debug("(avgSpeed): [" + id + ", " + newAvgSpeed.lastTimestamp + ", " + latitude + ", " + longitude + ", " + speed + ", " + newAvgSpeed.avgSpeed + "]");
+            logger.debug("(avgSpeed): [taxiId={}, timestamp={}, latitude={}, longitude={}, avgSpeed={}]", id, newAvgSpeed.lastTimestamp, latitude, longitude, String.format("%.3f", newAvgSpeed.avgSpeed));
         }
 
         return newAvgSpeed;
