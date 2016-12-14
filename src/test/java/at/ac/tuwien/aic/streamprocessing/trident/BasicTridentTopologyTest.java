@@ -27,7 +27,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
         emitTaxis(taxis);
 
-        wait(10);
+        wait(15);
 
         assertThat(collectSpeed(1), contains(0.0, 0.0, 0.0));
         assertThat(collectAverageSpeed(1), contains(0.0, 0.0, 0.0));
@@ -46,7 +46,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
         emitTaxis(taxis);
 
-        wait(10);
+        wait(15);
 
         // As both trips are of equal length and take an hour each, all values should be the same
         double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
