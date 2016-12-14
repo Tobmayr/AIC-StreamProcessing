@@ -1,12 +1,11 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
-import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeed;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
-
-import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CalculateAverageSpeed extends LastState<AvgSpeed> {
 
@@ -16,7 +15,7 @@ public class CalculateAverageSpeed extends LastState<AvgSpeed> {
      * operator because it is required to always remember the last location of the taxi to calculate the current
      * speed[1]
      */
-
+    private final Logger logger = LoggerFactory.getLogger(CalculateAverageSpeed.class);
 
     protected AvgSpeed calculate(TridentTuple newTuple, AvgSpeed oldAvgSpeed, TridentCollector collector) {
         Integer id = newTuple.getIntegerByField("id"); //test
@@ -45,7 +44,6 @@ public class CalculateAverageSpeed extends LastState<AvgSpeed> {
         } else {
             Double time = this.time(oldAvgSpeed.lastTimestamp, newAvgSpeed.lastTimestamp); //in hours
 
-
             newAvgSpeed.hours = oldAvgSpeed.hours + time;
 
             if (Double.compare(newAvgSpeed.hours, 0.0) == 0) {
@@ -55,6 +53,7 @@ public class CalculateAverageSpeed extends LastState<AvgSpeed> {
             }
 
             collector.emit(new Values(id, newAvgSpeed.lastTimestamp, latitude, longitude, speed, newAvgSpeed.avgSpeed,newAvgSpeed));
+            logger.debug("(avgSpeed): [" + id + ", " + newAvgSpeed.lastTimestamp + ", " + latitude + ", " + longitude + ", " + speed + ", " + newAvgSpeed.avgSpeed + "]");
         }
 
         return newAvgSpeed;

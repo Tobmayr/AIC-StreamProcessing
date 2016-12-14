@@ -4,12 +4,16 @@ import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class CalculateDistance extends LastState<CalculateDistance.TaxiDistance> {
+
+    private final Logger logger = LoggerFactory.getLogger(CalculateDistance.class);
 
     class TaxiDistance {
 
@@ -60,8 +64,6 @@ public class CalculateDistance extends LastState<CalculateDistance.TaxiDistance>
         distanceArray.add(td.traveled);
         collector.emit(new Values(id, timestamp, td.latitude, td.longitude, td.traveled, distanceArray));
 
-
         return td;
     }
-
 }

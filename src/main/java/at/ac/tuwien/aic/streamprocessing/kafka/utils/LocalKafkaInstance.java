@@ -60,10 +60,10 @@ public class LocalKafkaInstance {
     }
 
     public void start() throws Exception {
-        System.out.println("Starting zookeeper.");
+        logger.info("Starting zookeeper.");
         File zookeeperLogDir = temporaryLogDir.resolve("zookeeper-logs").toFile();
         this.zookeeperServer = new TestingServer(zookeeper_port, zookeeperLogDir);
-        System.out.println("Started zookeeper.");
+        logger.info("Started zookeeper.");
 
         ExponentialBackoffRetry retryPolicy = new BoundedExponentialBackoffRetry(200, 5000, 5);
         CuratorFramework zookeeper = CuratorFrameworkFactory.newClient(
@@ -83,26 +83,26 @@ public class LocalKafkaInstance {
 
         this.kafkaServer = new KafkaServerStartable(config);
 
-        System.out.println("Starting kafka");
+        logger.info("Starting kafka");
         kafkaServer.startup();
-        System.out.println("Started kafka");
+        logger.info("Started kafka");
     }
 
     public void stop() throws Exception {
-        System.out.println("Shutting down kafka.");
+        logger.info("Shutting down kafka.");
         this.kafkaServer.shutdown();
-        System.out.println("Shut down kafka.");
+        logger.info("Shut down kafka.");
 
-        System.out.println("Shutting down zookeeper");
+        logger.info("Shutting down zookeeper");
         this.zookeeperServer.close();
         this.zookeeperServer.stop();
-        System.out.println("Shut down zookeeper");
+        logger.info("Shut down zookeeper");
 
         FileUtils.deleteDirectory(temporaryLogDir.toFile());
     }
 
     public void createTopic(String topicName) {
-        System.out.println("Creating topic " + topicName);
+        logger.info("Creating topic " + topicName);
 
         String zookeeper_uri = "localhost:" + zookeeper_port;
 
@@ -116,6 +116,6 @@ public class LocalKafkaInstance {
 
         zkUtils.close();
 
-        System.out.println("Created topic " + topicName);
+        logger.info("Created topic " + topicName);
     }
 }
