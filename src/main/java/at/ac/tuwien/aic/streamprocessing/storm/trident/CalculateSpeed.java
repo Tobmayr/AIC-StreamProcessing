@@ -1,38 +1,59 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident;
 
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.Position;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
-public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
+public class CalculateSpeed extends LastState<Position> {
 
-    /**
-     * The _Calculate speed_ operator calculates the speed between two successive locations for each taxi, whereas the
-     * distance between two locations can be derived by the Haversine formula{4}. This operator represents a stateful
-     * operator because it is required to always remember the last location of the taxi to calculate the current
-     * speed[1]
-     *
-     */
-
-    class Position {
-        String timestamp;
+    class PositionTuple {
         Double latitude;
         Double longitude;
+        String timestamp;
+        LocalDateTime ts;
+        Position persisted;
+
+        PositionTuple(TridentTuple tuple) {
+            this.timestamp = tuple.getStringByField("timestamp");
+            this.ts = Timestamp.parse(this.timestamp);
+            this.latitude = tuple.getDoubleByField("latitude");
+            this.longitude = tuple.getDoubleByField("longitude");
+            this.persisted = (Position) tuple.getValueByField("positionArray");
+        }
+
+        Position getPosition () {
+            Position position = new Position();
+            position.timestamp = this.timestamp;
+            position.latitude = this.latitude;
+            position.longitude = this.longitude;
+            return position;
+        }
     }
 
-    protected Position calculate(TridentTuple newTuple, Position position, TridentCollector collector) {
+    protected Position calculate(TridentTuple newTuple, Position previous, TridentCollector collector) {
         Integer id = newTuple.getIntegerByField("id"); //test
-        Position newPosition = new Position();
-        newPosition.timestamp = newTuple.getStringByField("timestamp");
-        newPosition.latitude = newTuple.getDoubleByField("latitude");
-        newPosition.longitude = newTuple.getDoubleByField("longitude");
+        PositionTuple input = new PositionTuple(newTuple);
 
-        if (position != null) {
-            LocalDateTime oldTime = Timestamp.parse(position.timestamp);
-            LocalDateTime newTime = Timestamp.parse(newPosition.timestamp);
+        if (previous == null && input.persisted != null) {
+            previous = input.persisted;
+        }
+
+        if (previous == null && input.persisted == null) {
+            previous = input.getPosition();
+        }
+
+        // act like there has already been a tuple
+        previous.timestamp = previous.timestamp == null ? input.timestamp : previous.timestamp;
+        previous.latitude = previous.latitude == null ? input.latitude : previous.latitude;
+        previous.longitude = previous.longitude == null ? input.longitude : previous.longitude;
+
+        LocalDateTime oldTime = Timestamp.parse(previous.timestamp);
+        LocalDateTime newTime = Timestamp.parse(input.timestamp);
 
             Double speed;
 
@@ -42,15 +63,15 @@ public class CalculateSpeed extends LastState<CalculateSpeed.Position> {
                 // since it is not meaningful to compute the speed in this case, just use a default value of 0.0
                 speed = 0.0;
             } else {
-                Double distance = this.distance(newTuple, position.latitude, position.longitude); // in km
-                Double time = this.time(position.timestamp, newPosition.timestamp); //in hours
+                Double distance = this.distance(newTuple, previous.latitude, previous.longitude); // in km
+                Double time = this.time(previous.timestamp, input.timestamp); //in hours
                 speed = distance / time;  //in kmh
             }
 
-            collector.emit(new Values(id, newPosition.timestamp, newPosition.latitude, newPosition.longitude, speed));
-        }
+            collector.emit(new Values(id, input.timestamp, input.latitude, input.longitude, speed, previous));
 
-        return newPosition;
+
+        return input.getPosition();
     }
 
 }

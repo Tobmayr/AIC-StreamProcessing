@@ -34,7 +34,6 @@ public abstract class LastState<T> extends BaseAggregator<LocationMapState<T>> {
     }
 
     public void aggregate(LocationMapState<T> state, TridentTuple newTuple, TridentCollector collector) {
-//        System.out.println("aggregate: " + state.map);
         HashMap<Integer, T> map = state.map;
         Integer id = newTuple.getIntegerByField("id");
 

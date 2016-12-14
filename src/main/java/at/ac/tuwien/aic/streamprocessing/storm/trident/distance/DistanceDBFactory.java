@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.distance;
 
 import org.apache.storm.task.IMetricsContext;
 import org.apache.storm.trident.state.State;

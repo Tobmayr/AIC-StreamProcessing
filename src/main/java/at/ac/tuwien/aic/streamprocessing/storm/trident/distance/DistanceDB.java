@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.distance;
 
 import org.apache.storm.trident.state.State;
 import redis.clients.jedis.Jedis;
@@ -19,9 +19,11 @@ public class DistanceDB implements State {
     }
 
     public void beginCommit(Long txid) {
+        //jedis.multi(); // TODO start transaction
     }
 
     public void commit(Long txid) {
+        //jedis.exec(); // TODO commit transaction
     }
 
     public void setLocationsBulk(List<Integer> taxiIds, List<ArrayList<Double>> locationsWithDistance) {

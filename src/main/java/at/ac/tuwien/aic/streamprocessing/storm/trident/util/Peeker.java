@@ -16,6 +16,6 @@ public class Peeker implements Consumer {
 
     @Override
     public void accept(TridentTuple input) {
-        System.out.println("Peeker(id:" + this.id + "): " + input.getValues());
+        System.out.println("Peeker(id:" + this.id + "): " + ( input == null ? "NULL" : input.getValues()));
     }
 }
