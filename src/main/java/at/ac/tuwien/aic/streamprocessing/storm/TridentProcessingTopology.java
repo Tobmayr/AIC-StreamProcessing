@@ -15,6 +15,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
+import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -205,9 +206,30 @@ public class TridentProcessingTopology {
     }
 
     public static void main(String[] args) throws Exception {
-        BaseFilter speedListener = new Debug("speed");
-        BaseFilter avgSpeedListener = new Debug("avgSpeed");
-        BaseFilter distanceListener = new Debug("distance");
+//        BaseFilter speedListener = new Debug("speed");
+//        BaseFilter avgSpeedListener = new Debug("avgSpeed");
+//        BaseFilter distanceListener = new Debug("distance");
+
+        BaseFilter speedListener = new BaseFilter() {
+            @Override
+            public boolean isKeep(TridentTuple tuple) {
+                return true;
+            }
+        };
+
+        BaseFilter avgSpeedListener = new BaseFilter() {
+            @Override
+            public boolean isKeep(TridentTuple tuple) {
+                return true;
+            }
+        };
+
+        BaseFilter distanceListener = new BaseFilter() {
+            @Override
+            public boolean isKeep(TridentTuple tuple) {
+                return true;
+            }
+        };
 
         TridentProcessingTopology topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
         topology.submitLocalCluster();
