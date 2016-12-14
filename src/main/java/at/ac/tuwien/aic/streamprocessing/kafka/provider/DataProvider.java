@@ -70,14 +70,16 @@ public class DataProvider {
                     try {
                         Time.sleep((seconds * 1000) / speedFactor);
                     } catch (InterruptedException e) {
-
+                        logger.error("Thread was interrupted", e);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Filed reading the file!", e);
         } finally {
+            logger.debug("Closing producer...");
             producer.close();
+            logger.debug("Producer closed");
         }
     }
 
@@ -144,7 +146,7 @@ public class DataProvider {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-            System.out.println("USAGE: <absolute-path-of-input-data> <topic-name> <speed-factor-to-divide-seconds>");
+           logger.error("USAGE: <absolute-path-of-input-data> <topic-name> <speed-factor-to-divide-seconds>");
             return;
         }
 
