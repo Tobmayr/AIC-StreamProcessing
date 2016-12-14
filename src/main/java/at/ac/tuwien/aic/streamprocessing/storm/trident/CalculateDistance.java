@@ -53,7 +53,7 @@ public class CalculateDistance extends LastState<CalculateDistance.TaxiDistance>
 
         Double distance = this.distance(newTuple, taxiDistance.latitude, taxiDistance.longitude); // in km
 
-        td.traveled = persisted.traveled + distance;
+        td.traveled = taxiDistance.traveled + distance;
         ArrayList<Double> distanceArray = new ArrayList<>();
         distanceArray.add(td.latitude);
         distanceArray.add(td.longitude);
