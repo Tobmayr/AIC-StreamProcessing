@@ -3,6 +3,16 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.*;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedDBFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedUpdater;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceDBFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceUpdater;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.QueryDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedDBFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedUpdater;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Peeker;
 import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -12,10 +22,13 @@ import org.apache.storm.kafka.ZkHosts;
 import org.apache.storm.kafka.trident.OpaqueTridentKafkaSpout;
 import org.apache.storm.kafka.trident.TridentKafkaConfig;
 import org.apache.storm.trident.Stream;
+import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.operation.builtin.Debug;
+
 import org.apache.storm.trident.tuple.TridentTuple;
+import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -25,6 +38,10 @@ public class TridentProcessingTopology {
     private final Logger logger = LoggerFactory.getLogger(TridentProcessingTopology.class);
 
     private static final String SPOUT_ID = "kafka-spout";
+    public static final Fields BASE_DIST_DISTARR = new Fields("id", "timestamp", "latitude", "longitude", "distance", "distanceArray");
+    public static final Fields ID = new Fields("id");
+    public static final Fields DISTANCEARRAY = new Fields("distanceArray");
+    public static final Fields ID_DISTARR = new Fields("id", "distanceArray");
 
     private String topic;
 
@@ -140,23 +157,51 @@ public class TridentProcessingTopology {
         Stream inputStream = topology.newStream(SPOUT_ID, spout);
 
         // setup speed aggregator
-        Stream speedStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS).toStream();
+        //Stream speedStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateSpeed(), TaxiFields.BASE_SPEED_FIELDS).toStream();
+        TridentState speed = topology.newStaticState(new SpeedDBFactory("speed",redisHost,redisPort));
+        Stream speedStream = inputStream
+                .stateQuery(speed, ID, new SpeedQuery(), new Fields("positionArray"))
+//                .peek(new Peeker("speedBefore"))
+                .partitionAggregate( TaxiFields.BASE_POSITIONARRAY,  new CalculateSpeed(), TaxiFields.BASE_SPEED_POSITIONARRAY)
+                .toStream()
+//                .peek(new Peeker("speedAfter"))
+                ;
+        speedStream.partitionPersist( new SpeedDBFactory("speed",redisHost,redisPort), TaxiFields.ID_POSITIONARRAY, new SpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
 
         if (speedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.BASE_SPEED_FIELDS, speedTupleListener);
         }
 
         // setup average speed aggregator
-        speedStream = speedStream.partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS).toStream();
+        //speedStream = speedStream.partitionAggregate(TaxiFields.BASE_SPEED_FIELDS, new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_FIELDS).toStream();
+        TridentState avgSpeed = topology.newStaticState(new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort));
+        Stream avgSpeedStream = speedStream
+                .stateQuery(avgSpeed, ID, new AvgSpeedQuery(), new Fields("avgSpeedObject"))
+//                .peek(new Peeker("avgSpeedBefore"))
+                .partitionAggregate( TaxiFields.BASE_SPEED_AVGSPEEDOBJECT,  new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_AVGSPEEDOBJECT)
+                .toStream()
+//                .peek(new Peeker("avgSpeedAfter"))
+                ;
+        avgSpeedStream.partitionPersist( new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort), TaxiFields.ID_AVGSPEEDOBJECT, new AvgSpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
+
 
         if (avgSpeedTupleListener != null) {
-            speedStream = speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
+            avgSpeedStream = avgSpeedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, avgSpeedTupleListener);
         }
 
-        speedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
+        avgSpeedStream.each(TaxiFields.BASE_SPEED_AVG_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
+
 
         // setup distance aggregator
-        Stream distanceStream = inputStream.partitionAggregate(TaxiFields.BASE_FIELDS, new CalculateDistance(), TaxiFields.BASE_DISTANCE_FIELDS);
+        TridentState distance = topology.newStaticState(new DistanceDBFactory("distance",redisHost,redisPort));
+        Stream distanceStream = inputStream
+                .stateQuery(distance, ID, new QueryDistance(), DISTANCEARRAY)
+//                .peek(new Peeker("distanceBefore"))
+                .partitionAggregate( TaxiFields.BASE_DISTARRAY,  new CalculateDistance(), BASE_DIST_DISTARR)
+                .toStream()
+//                .peek(new Peeker("distanceAfter"))
+                ;
+        distanceStream.partitionPersist( new DistanceDBFactory("distance",redisHost,redisPort), ID_DISTARR, new DistanceUpdater()).newValuesStream();//.peek(new Peeker("Persistence"));
 
         if (distanceTupleListener != null) {
             distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);

@@ -43,7 +43,8 @@ public abstract class LastState<T> extends BaseAggregator<LocationMapState<T>> {
     }
 
     public void complete(LocationMapState state, TridentCollector collector) {
-        // nothing to do here
+        //System.out.println("aggregate Complete: " + state.map);
+
     }
 }
 
