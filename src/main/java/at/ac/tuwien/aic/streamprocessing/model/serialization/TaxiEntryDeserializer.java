@@ -26,11 +26,11 @@ public class TaxiEntryDeserializer {
             try (ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayStream)) {
                 return (TaxiEntry) objectInputStream.readObject();
             } catch (ClassNotFoundException e) {
-                System.out.println("Failed to deserialize TaxiEntry" + e);
+                logger.error("Failed to deserialize TaxiEntry" , e);
                 return null;
             }
         } catch (IOException e) {
-            System.out.println("Failed to deserialize TaxiEntry" + e);
+            logger.error("Failed to deserialize TaxiEntry" , e);
             return null;
         }
     }

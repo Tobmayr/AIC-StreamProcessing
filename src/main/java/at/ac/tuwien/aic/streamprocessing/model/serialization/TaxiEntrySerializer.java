@@ -41,7 +41,7 @@ public class TaxiEntrySerializer implements Serializer<TaxiEntry> {
             }
             return Base64.getEncoder().encode(byteArrayStream.toByteArray());
         } catch (IOException e) {
-            logger.debug("Failed to serialize " + data.toString(), e);
+            logger.error("Failed to serialize " + data.toString(), e);
             return null;
         }
     }
