@@ -163,10 +163,10 @@ public class TridentProcessingTopology {
         TridentState speed = topology.newStaticState(new SpeedDBFactory("speed",redisHost,redisPort));
         Stream speedStream = inputStream
                 .stateQuery(speed, ID, new SpeedQuery(), new Fields("positionArray"))
-                .peek(new Peeker("speedBefore"))
+//                .peek(new Peeker("speedBefore"))
                 .partitionAggregate( TaxiFields.BASE_POSITIONARRAY,  new CalculateSpeed(), TaxiFields.BASE_SPEED_POSITIONARRAY)
                 .toStream()
-                .peek(new Peeker("speedAfter"))
+//                .peek(new Peeker("speedAfter"))
                 ;
         speedStream.partitionPersist( new SpeedDBFactory("speed",redisHost,redisPort), TaxiFields.ID_POSITIONARRAY, new SpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
 
@@ -179,10 +179,10 @@ public class TridentProcessingTopology {
         TridentState avgSpeed = topology.newStaticState(new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort));
         Stream avgSpeedStream = speedStream
                 .stateQuery(avgSpeed, ID, new AvgSpeedQuery(), new Fields("avgSpeedObject"))
-                .peek(new Peeker("avgSpeedBefore"))
+//                .peek(new Peeker("avgSpeedBefore"))
                 .partitionAggregate( TaxiFields.BASE_SPEED_AVGSPEEDOBJECT,  new CalculateAverageSpeed(), TaxiFields.BASE_SPEED_AVG_AVGSPEEDOBJECT)
                 .toStream()
-                .peek(new Peeker("avgSpeedAfter"))
+//                .peek(new Peeker("avgSpeedAfter"))
                 ;
         avgSpeedStream.partitionPersist( new AvgSpeedDBFactory("avgSpeed",redisHost,redisPort), TaxiFields.ID_AVGSPEEDOBJECT, new AvgSpeedUpdater()).newValuesStream(); //.peek(new Peeker("Persistence"));
 
@@ -198,12 +198,12 @@ public class TridentProcessingTopology {
         TridentState distance = topology.newStaticState(new DistanceDBFactory("distance",redisHost,redisPort));
         Stream distanceStream = inputStream
                 .stateQuery(distance, ID, new QueryDistance(), DISTANCEARRAY)
-                .peek(new Peeker("distanceBefore"))
+//                .peek(new Peeker("distanceBefore"))
                 .partitionAggregate( TaxiFields.BASE_DISTARRAY,  new CalculateDistance(), BASE_DIST_DISTARR)
                 .toStream()
-                .peek(new Peeker("distanceAfter"))
+//                .peek(new Peeker("distanceAfter"))
                 ;
-        distanceStream.partitionPersist( new DistanceDBFactory("distance",redisHost,redisPort), ID_DISTARR, new DistanceUpdater()).newValuesStream().peek(new Peeker("Persistence"));
+        distanceStream.partitionPersist( new DistanceDBFactory("distance",redisHost,redisPort), ID_DISTARR, new DistanceUpdater()).newValuesStream();//.peek(new Peeker("Persistence"));
 
         if (distanceTupleListener != null) {
             distanceStream = distanceStream.toStream().each(TaxiFields.BASE_DISTANCE_FIELDS, distanceTupleListener);

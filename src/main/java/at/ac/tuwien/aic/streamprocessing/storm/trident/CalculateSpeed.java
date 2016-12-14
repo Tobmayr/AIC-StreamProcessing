@@ -58,7 +58,7 @@ public class CalculateSpeed extends LastState<Position> {
             Double speed;
 
             if (oldTime.isAfter(newTime) || oldTime.isEqual(newTime)) {
-                System.out.println("Old tuple is not older than new one!");
+//                System.out.println("Old tuple is not older than new one!");
 
                 // since it is not meaningful to compute the speed in this case, just use a default value of 0.0
                 speed = 0.0;
