@@ -75,7 +75,7 @@ public class CalculateSpeed extends LastState<Position> {
         }
 
         collector.emit(new Values(id, input.timestamp, input.latitude, input.longitude, speed, previous));
-        logger.debug("(speed): [" + id + ", " + input.timestamp + ", " + input.latitude + ", " + input.longitude + ", " + speed + ", " + previous + "]");
+        logger.debug("(speed): [taxiId={}, timestamp={}, latitude={}, longitude={}, speed={}]", id ,input.timestamp, input.latitude, input.longitude, String.format("%.3f", speed));
 
         return input.getPosition();
     }
