@@ -53,7 +53,7 @@ public class RedisMonitor extends Application {
                     @Override
                     public void run() {
                         tableView.setItems(FXCollections.observableArrayList(taxis));
-                        printData(taxis);
+                        // printData(taxis);
                     }
                 });
 
