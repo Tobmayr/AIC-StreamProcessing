@@ -7,18 +7,28 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
+/**
+ * The _Calculate Speed_ operator calculates the speed between two successive locations for each taxi, whereas the
+ * distance between two locations can be derived by the Haversine formula. This operator represents a stateful
+ * operator because it is required to always remember the last location of the taxi to calculate the current
+ * speed.
+ */
 public class CalculateSpeed extends Aggregator<SpeedState> {
+
+    private final Logger logger = LoggerFactory.getLogger(CalculateSpeed.class);
+
+    private StateObjectMapper<SpeedState> mapper;
 
     public CalculateSpeed() {
         super(true);
     }
-
-    private StateObjectMapper<SpeedState> mapper;
 
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
@@ -48,6 +58,15 @@ public class CalculateSpeed extends Aggregator<SpeedState> {
         } else {
             speed = distance / time;  // in kmh
         }
+
+        logger.debug(
+                "(speed): [taxiId={}, timestamp={}, latitude={}, longitude={}, speed={}]",
+                tuple.getIntegerByField("id"),
+                timestamp,
+                currentLatitude,
+                currentLongitude,
+                String.format("%.3f", speed)
+        );
 
         return new SpeedState(timestamp, currentLatitude, currentLongitude, speed);
     }

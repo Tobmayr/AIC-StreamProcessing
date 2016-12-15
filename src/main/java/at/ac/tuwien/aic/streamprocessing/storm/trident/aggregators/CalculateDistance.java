@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class CalculateDistance extends Aggregator<DistanceState> {
+    private final Logger logger = LoggerFactory.getLogger(CalculateDistance.class);
 
     private DistanceStateMapper mapper;
 
@@ -26,16 +27,25 @@ public class CalculateDistance extends Aggregator<DistanceState> {
         this.mapper = new DistanceStateMapper();
     }
 
-    private final Logger logger = LoggerFactory.getLogger(CalculateDistance.class);
-
     @Override
     protected DistanceState compute(DistanceState previous, TridentTuple tuple) {
         Double latitude = tuple.getDoubleByField("latitude");
         Double longitude = tuple.getDoubleByField("longitude");
 
         Double delta = Haversine.calculateDistanceBetween(previous.getLatitude(), previous.getLongitude(), latitude, longitude);
+        Double distance = previous.getDistance() + delta;
 
-        return new DistanceState(latitude, longitude, previous.getDistance() + delta);
+        logger.debug(
+                "(distance): [taxiId={}, timestamp={}, latitude={}, longitude={}, distance={}]",
+                tuple.getIntegerByField("id"),
+                tuple.getStringByField("timestamp"),
+                latitude,
+                longitude,
+                String.format("%.3f", distance)
+        );
+
+
+        return new DistanceState(latitude, longitude, distance);
     }
 
     @Override

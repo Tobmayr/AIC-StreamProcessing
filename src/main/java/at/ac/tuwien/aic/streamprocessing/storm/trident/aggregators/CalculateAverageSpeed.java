@@ -5,16 +5,19 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.Averag
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class CalculateAverageSpeed extends Aggregator<AverageSpeedState> {
+    private final Logger logger = LoggerFactory.getLogger(CalculateAverageSpeed.class);
+
+    private StateObjectMapper<AverageSpeedState> mapper;
 
     public CalculateAverageSpeed() {
         super(false);
     }
-
-    private StateObjectMapper<AverageSpeedState> mapper;
 
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
@@ -31,6 +34,16 @@ public class CalculateAverageSpeed extends Aggregator<AverageSpeedState> {
 
         Double newSpeedSum = speedSum + speed;
         Integer newObservations = observations + 1;
+
+        Double averageSpeed = newSpeedSum / newObservations;
+
+        logger.debug(
+                "(avgSpeed): [taxiId={}, timestamp={}, avgSpeed={}]",
+                tuple.getIntegerByField("id"),
+                tuple.getStringByField("timestamp"),
+                String.format("%.3f", averageSpeed)
+        );
+
 
         return new AverageSpeedState(newObservations, newSpeedSum);
     }

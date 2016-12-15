@@ -11,9 +11,9 @@ public class TaxiFields {
     public static Fields CALCULATE_SPEED_OUTPUT_FIELDS = new Fields("id", "timestamp", "latitude", "longitude", "speed");
 
     // avg speed tuple fields
-    public static Fields ID_AND_SPEED_FIELDS = new Fields("id", "speed");
+    public static Fields ID_AND_SPEED_FIELDS = new Fields("id", "timestamp", "speed");
     public static Fields AVG_SPEED_STATE_FIELDS = new Fields("observations", "speedSum", "has_state");
-    public static Fields AVG_SPEED_INPUT_FIELDS = new Fields("id", "speed", "observations", "speedSum", "has_state");
+    public static Fields AVG_SPEED_INPUT_FIELDS = new Fields("id", "timestamp", "speed", "observations", "speedSum", "has_state");
     public static Fields AVG_SPEED_OUTPUT_FIELDS = new Fields("id", "avgSpeed", "observations", "speedSum");
 
     // distance tuple fields
