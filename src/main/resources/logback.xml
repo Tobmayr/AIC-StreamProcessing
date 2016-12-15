@@ -16,7 +16,7 @@
     <appender name="CalculateSpeedLogFile" class="ch.qos.logback.core.FileAppender">
         <file>logs/CalculateSpeed.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
     <logger name="at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed" level="debug" additivity="false">
@@ -26,7 +26,7 @@
     <appender name="CalculateAverageSpeedLogFile" class="ch.qos.logback.core.FileAppender">
         <file>logs/CalculateAverageSpeed.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
     <logger name="at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed" level="debug" additivity="false">
@@ -36,20 +36,10 @@
     <appender name="CalculateDistanceLogFile" class="ch.qos.logback.core.FileAppender">
         <file>logs/CalculateDistance.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
     <logger name="at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance" level="debug" additivity="false">
         <appender-ref ref="CalculateDistanceLogFile"/>
-    </logger>
-
-    <appender name="TaxiEntryKafkaProducerLogFile" class="ch.qos.logback.core.FileAppender">
-        <file>logs/TaxiEntryKafkaProducer.log</file>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-    <logger name="at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer" level="debug" additivity="false">
-        <appender-ref ref="TaxiEntryKafkaProducerLogFile"/>
     </logger>
 </configuration>
