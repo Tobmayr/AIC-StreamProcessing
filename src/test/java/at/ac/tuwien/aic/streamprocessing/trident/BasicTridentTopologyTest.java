@@ -2,7 +2,7 @@ package at.ac.tuwien.aic.streamprocessing.trident;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.Haversine;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedStateFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceStateFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedStateFactory;
@@ -57,8 +57,8 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         wait(15);
 
         // As both trips are of equal length and take an hour each, all values should be the same
-        double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
-        double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
+        double dist1 = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
+        double dist2 = Haversine.calculateDistanceBetween(10.5, 10.0, 10.0, 10.0);
 
         assertThat(collectSpeed(1), contains(dist1, dist2));
         assertThat(collectAverageSpeed(1), contains(dist1, dist2));
@@ -83,8 +83,8 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         wait(15);
 
         // As both trips are of equal length and take an hour each, all values should be the same
-        double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
-        double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
+        double dist1 = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
+        double dist2 = Haversine.calculateDistanceBetween(10.5, 10.0, 10.0, 10.0);
 
         assertThat(collectSpeed(1), contains(dist1, dist2));
         assertThat(collectAverageSpeed(1), contains(dist1, dist2));
@@ -122,8 +122,8 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
         double initialDistance = 42.0;
         double initialAvgSpeed = 50.0;
-        double dist1 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
-        double dist2 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
+        double dist1 = Haversine.calculateDistanceBetween(10.5, 10.0, 10.0, 10.0);
+        double dist2 = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
 
         assertThat(collectSpeed(1), contains(dist1, dist2));
         assertThat(collectAverageSpeed(1), contains((initialAvgSpeed + dist1) / 2.0, (initialAvgSpeed + dist1 + dist2) / 3.0));
@@ -150,8 +150,8 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(getAvgSpeedTupleListener().getTuples(), hasSize(3));
 
         // As both trips are of equal length and take an hour each, all values should be the same
-        double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
-        double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
+        double dist1 = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
+        double dist2 = Haversine.calculateDistanceBetween(10.5, 10.0, 10.0, 10.0);
 
         assertThat(getSpeedTupleListener().getTuples().get(0).speed, equalTo(0.0));
         assertThat(getSpeedTupleListener().getTuples().get(1).speed, equalTo(0.0));
@@ -186,7 +186,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(getDistanceTupleListener().getTuples(), hasSize(4));
         assertThat(getAvgSpeedTupleListener().getTuples(), hasSize(3));
 
-        double dist = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
+        double dist = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
 
         // Make sure that initial inconsistent values (i.e. multiple entries at the same time)
         // do not trap the calculations of later, meaningful entries
@@ -227,8 +227,8 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
         // Important that last entry is ignored as there are two entries at the same time
         // Speed of the tuple is zero and the distance does not change and the average speed keeps the previous value
-        double dist1 = Haversine.haversine(10.0, 10.0, 10.5, 10.0);
-        double dist2 = Haversine.haversine(10.5, 10.0, 10.0, 10.0);
+        double dist1 = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
+        double dist2 = Haversine.calculateDistanceBetween(10.5, 10.0, 10.0, 10.0);
 
         assertThat(getSpeedTupleListener().getTuples().get(0).speed, equalTo(dist1));
         assertThat(getSpeedTupleListener().getTuples().get(1).speed, equalTo(dist2));

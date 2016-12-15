@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.util;
 
 public class Haversine {
     private static final double R = 6372.8; // Earth Radius in kilometers
@@ -12,7 +12,7 @@ public class Haversine {
      * @param lon2 end Position
      * @return distance in Kilometers
      */
-    public static double haversine(double lat1, double lon1, double lat2, double lon2) {
+    public static double calculateDistanceBetween(double lat1, double lon1, double lat2, double lon2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         lat1 = Math.toRadians(lat1);

@@ -4,9 +4,9 @@ import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedStateMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Values;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -33,7 +33,7 @@ public class CalculateSpeed extends Aggregator<SpeedState> {
         Double currentLatitude = tuple.getDoubleByField("latitude");
         Double currentLongitude = tuple.getDoubleByField("longitude");
 
-        Double distance = Haversine.haversine(
+        Double distance = Haversine.calculateDistanceBetween(
                 previous.getLatitude(), previous.getLongitude(),
                 currentLatitude, currentLongitude);
 

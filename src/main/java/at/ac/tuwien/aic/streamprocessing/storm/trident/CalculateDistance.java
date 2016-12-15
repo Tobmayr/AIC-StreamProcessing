@@ -3,9 +3,9 @@ package at.ac.tuwien.aic.streamprocessing.storm.trident;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceStateMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class CalculateDistance extends Aggregator<DistanceState> {
         Double latitude = tuple.getDoubleByField("latitude");
         Double longitude = tuple.getDoubleByField("longitude");
 
-        Double delta = Haversine.haversine(previous.getLatitude(), previous.getLongitude(), latitude, longitude);
+        Double delta = Haversine.calculateDistanceBetween(previous.getLatitude(), previous.getLongitude(), latitude, longitude);
 
         return new DistanceState(latitude, longitude, previous.getDistance() + delta);
     }
