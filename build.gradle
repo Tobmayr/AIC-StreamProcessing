@@ -81,12 +81,20 @@ test {
 task runDataprovider(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DataProvider"
-    if ( project.hasProperty("speed") ) {
-        args "./testdata/taxi_data.csv", "taxi", project.getProperty('speed')
-    }else{
-        args "./testdata/taxi_data.csv", "taxi", "1"
-    }
 
+    if (project.hasProperty("data")) {
+        if (project.hasProperty("speed")) {
+            args project.getProperty("data"), "taxi", project.getProperty('speed')
+        } else {
+            args project.getProperty("data"), "taxi", "1"
+        }
+    } else {
+        if (project.hasProperty("speed")) {
+            args "./testdata/taxi_data.csv", "taxi", project.getProperty('speed')
+        } else {
+            args "./testdata/taxi_data.csv", "taxi", "1"
+        }
+    }
 }
 
 task runRedisMonitor(type: JavaExec) {
