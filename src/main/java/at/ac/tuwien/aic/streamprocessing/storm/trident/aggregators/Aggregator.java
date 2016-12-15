@@ -40,13 +40,6 @@ public abstract class Aggregator<T extends StateObject> extends BaseAggregator<M
             } else {
                 // tuple has no state attached, just project actual fields
                 previous = getMapper().fromTuple(tuple);
-
-                if (skipFirst) {
-                    // no prior information. just save it
-                    // do nothing and just save it
-                    batchState.put(id, previous);
-                    return;
-                }
             }
         }
 
