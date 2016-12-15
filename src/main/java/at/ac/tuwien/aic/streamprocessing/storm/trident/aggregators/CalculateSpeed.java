@@ -1,8 +1,8 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators;
 
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedStateMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.trident.operation.TridentOperationContext;

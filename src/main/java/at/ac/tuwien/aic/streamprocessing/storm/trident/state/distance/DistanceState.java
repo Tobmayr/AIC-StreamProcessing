@@ -1,4 +1,6 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 
 public class DistanceState implements StateObject {
     private Double latitude;  // last position

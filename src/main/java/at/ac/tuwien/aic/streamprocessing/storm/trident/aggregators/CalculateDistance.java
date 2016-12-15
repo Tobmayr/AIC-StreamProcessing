@@ -1,7 +1,7 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceStateMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceStateMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.trident.operation.TridentOperationContext;

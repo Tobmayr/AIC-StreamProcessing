@@ -2,18 +2,20 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.*;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedStateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceStateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedStateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateUpdater;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.AverageSpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AvgSpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateQuery;
 import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -26,7 +28,6 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
-
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
@@ -154,12 +155,12 @@ public class TridentProcessingTopology {
         Stream inputStream = topology.newStream(SPOUT_ID, spout);
 
         // setup speed aggregator
-        TridentState speed = topology.newStaticState(new SpeedStateFactory(redisHost, redisPort));
+        TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
         Stream speedStream = inputStream
                 .stateQuery(                                        // query the state for each taxi id
                         speed,
                         ID,
-                        new SpeedQuery(),
+                        new SpeedStateQuery(),
                         TaxiFields.SPEED_STATE_FIELDS
                 ).partitionAggregate(                               // batch-process entries
                         TaxiFields.CALCULATE_SPEED_INPUT_FIELDS,
@@ -169,7 +170,7 @@ public class TridentProcessingTopology {
 
         // update the new speed states
         speedStream.partitionPersist(
-                new SpeedStateFactory(redisHost, redisPort),
+                StateFactory.createSpeedStateFactory(redisHost, redisPort),
                 TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS,
                 new StateUpdater<RedisState<SpeedState>>()
         ).newValuesStream();
@@ -179,7 +180,7 @@ public class TridentProcessingTopology {
         }
 
         // setup average speed aggregator
-        TridentState avgSpeed = topology.newStaticState(new AvgSpeedStateFactory(redisHost,redisPort));
+        TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost,redisPort));
         Stream avgSpeedStream = speedStream
                 .project(TaxiFields.ID_AND_SPEED_FIELDS)
                 .stateQuery(                                // query the state for each taxi id
@@ -195,7 +196,7 @@ public class TridentProcessingTopology {
 
         // update the new average speed states
         avgSpeedStream.partitionPersist(
-                new AvgSpeedStateFactory(redisHost, redisPort),
+                StateFactory.createAverageSpeedStateFactory(redisHost, redisPort),
                 TaxiFields.AVG_SPEED_OUTPUT_FIELDS,
                 new StateUpdater<RedisState<AverageSpeedState>>()
         ).newValuesStream();
@@ -209,7 +210,7 @@ public class TridentProcessingTopology {
         avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
 
         // setup distance aggregator
-        TridentState distance = topology.newStaticState(new DistanceStateFactory(redisHost, redisPort));
+        TridentState distance = topology.newStaticState(StateFactory.createDistanceStateFactory(redisHost, redisPort));
         Stream distanceStream = inputStream
                 .stateQuery(                                        // query the state for each taxi id
                         distance,
@@ -224,7 +225,7 @@ public class TridentProcessingTopology {
 
         // update the new distance states
         distanceStream.partitionPersist(
-                new DistanceStateFactory(redisHost, redisPort),
+                StateFactory.createDistanceStateFactory(redisHost, redisPort),
                 TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS,
                 new StateUpdater<RedisState<DistanceState>>()
         ).newValuesStream();

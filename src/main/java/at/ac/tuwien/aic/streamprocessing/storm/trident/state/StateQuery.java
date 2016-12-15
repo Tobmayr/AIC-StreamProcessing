@@ -2,6 +2,7 @@ package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapperFactory;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.state.BaseQueryFunction;
@@ -13,14 +14,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class StateQuery<ST extends RedisState<T>, T extends StateObject> extends BaseQueryFunction<ST, T> {
-
+    private final String type;
     private StateObjectMapper<T> mapper;
+
+    public StateQuery(String type) {
+        this.type = type;
+    }
 
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
         super.prepare(conf, context);
 
-        mapper = createMapper();
+        StateObjectMapperFactory factory = new StateObjectMapperFactory(type);
+        mapper = factory.create();
     }
 
     @Override
@@ -42,6 +48,4 @@ public abstract class StateQuery<ST extends RedisState<T>, T extends StateObject
             collector.emit(mapper.toStateTuple(result));
         }
     }
-
-    protected abstract StateObjectMapper<T> createMapper();
 }

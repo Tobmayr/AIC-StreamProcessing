@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.persist;
 
 public enum InfoType {
     AVERAGE_SPEED("_avgSpeed", "avgSpeed"), DISTANCE("_dist", "distance");

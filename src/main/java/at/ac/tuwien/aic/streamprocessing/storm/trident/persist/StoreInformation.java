@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.persist;
 
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;

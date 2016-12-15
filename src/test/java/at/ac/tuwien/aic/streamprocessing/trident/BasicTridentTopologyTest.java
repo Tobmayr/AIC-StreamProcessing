@@ -2,14 +2,12 @@ package at.ac.tuwien.aic.streamprocessing.trident;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.averageSpeed.AvgSpeedStateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.distance.DistanceStateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.speed.SpeedStateFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.AverageSpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -99,13 +97,13 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
     public void test_withState_yieldsCorrectValues() throws Exception {
         LocalDateTime now = LocalDateTime.now();
 
-        RedisState distanceState = new DistanceStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        RedisState distanceState = StateFactory.createDistanceStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
         distanceState.setAll(Arrays.asList(1), Arrays.asList(new DistanceState(10.5, 10.0, 42.0)));
 
-        RedisState speedState = new SpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        RedisState speedState = StateFactory.createSpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
         speedState.setAll(Arrays.asList(1), Arrays.asList(new SpeedState(Timestamp.toString(now.minusMinutes(60)), 10.5, 10.0, 50.0)));
 
-        RedisState avgSpeedState = new AvgSpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
+        RedisState avgSpeedState = StateFactory.createAverageSpeedStateFactory(getTopology().getRedisHost(), getTopology().getRedisPort()).create();
         avgSpeedState.setAll(Arrays.asList(1), Arrays.asList(new AverageSpeedState(1, 50.0)));
 
         wait(5);

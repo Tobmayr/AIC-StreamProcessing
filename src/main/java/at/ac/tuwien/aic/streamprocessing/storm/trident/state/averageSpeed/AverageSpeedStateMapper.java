@@ -1,5 +1,6 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
 

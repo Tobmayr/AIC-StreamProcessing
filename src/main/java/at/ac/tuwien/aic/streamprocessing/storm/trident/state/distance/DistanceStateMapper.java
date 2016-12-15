@@ -1,12 +1,13 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
 
 public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
     @Override
-    public Values toStateTuple(at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState state) {
+    public Values toStateTuple(DistanceState state) {
         boolean actual_state = true;
 
         return new Values(
@@ -29,7 +30,7 @@ public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
     @Override
     public DistanceState fromTuple(TridentTuple tuple) {
-        return new at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState(
+        return new DistanceState(
                 tuple.getDoubleByField("latitude"),
                 tuple.getDoubleByField("longitude"),
                 tuple.getDoubleByField("distance")
@@ -43,7 +44,7 @@ public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
     @Override
     public DistanceState parseState(TridentTuple tuple) {
-        return new at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.DistanceState(
+        return new DistanceState(
                 tuple.getDoubleByField("prev_latitude"),
                 tuple.getDoubleByField("prev_longitude"),
                 tuple.getDoubleByField("distance")

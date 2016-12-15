@@ -1,11 +1,10 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.AverageSpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.AverageSpeedStateMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedStateMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Values;
 
 import java.util.Map;
 

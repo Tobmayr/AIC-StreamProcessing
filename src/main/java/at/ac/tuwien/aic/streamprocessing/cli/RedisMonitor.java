@@ -1,6 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.cli;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.InfoType;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;

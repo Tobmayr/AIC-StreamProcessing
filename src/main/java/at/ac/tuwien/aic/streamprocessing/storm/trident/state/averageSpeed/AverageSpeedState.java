@@ -1,4 +1,6 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 
 public class AverageSpeedState implements StateObject {
     private final Integer observations;

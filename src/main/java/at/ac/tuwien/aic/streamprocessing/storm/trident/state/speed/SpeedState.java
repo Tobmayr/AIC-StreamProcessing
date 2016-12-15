@@ -1,4 +1,6 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 
 public class SpeedState implements StateObject {
 
