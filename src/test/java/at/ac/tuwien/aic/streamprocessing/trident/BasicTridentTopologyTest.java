@@ -64,6 +64,36 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
     }
 
     @Test
+    public void test_simpleMoving_inBatches_yieldsCorrectValues() throws Exception {
+        // model a moving taxi
+        LocalDateTime now = LocalDateTime.now();
+        List<TaxiEntry> taxis = Arrays.asList(
+                new TaxiEntry(1, now, 10.0, 10.0),
+                new TaxiEntry(1, now.plusMinutes(60), 10.5, 10.0),
+                new TaxiEntry(1, now.plusMinutes(2 * 60), 10.0, 10.0)
+        );
+
+        emitTaxis(taxis);
+        wait(15);
+
+        double dist = Haversine.calculateDistanceBetween(10.0, 10.0, 10.5, 10.0);
+        assertThat(collectSpeed(1), contains(dist, dist));
+        assertThat(collectAverageSpeed(1), contains(dist, dist));
+        assertThat(collectDistance(1), contains(dist, 2*dist));
+
+        taxis = Arrays.asList(
+                new TaxiEntry(1, now.plusMinutes(3 * 60), 10.5, 10.0)
+        );
+
+        emitTaxis(taxis);
+        wait(15);
+
+        assertThat(collectSpeed(1), contains(dist, dist, dist));
+        //assertThat(collectAverageSpeed(1), contains(dist, dist, dist, dist, dist));
+        assertThat(collectDistance(1), contains(dist, 2*dist, 3*dist));
+    }
+
+    @Test
     public void test_multipleMoving_yieldsCorrectValues() throws Exception {
         // model a moving taxi
         LocalDateTime now = LocalDateTime.now();
