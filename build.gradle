@@ -87,6 +87,12 @@ task runDataprovider(type: JavaExec) {
     args "./testdata/taxi_data.csv", "taxi", project.getProperty('speed')
 }
 
+task runDummyDataProvider (type: JavaExec){
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DummyDataProvider"
+    args "./testdata/taxi_data.csv"
+}
+
 task runRedisMonitor(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.cli.RedisMonitor"
@@ -97,6 +103,7 @@ task runTopology (type: JavaExec){
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.storm.TridentProcessingTopology"
 }
+
 
 task stormJar(type: Jar) {
     dependsOn configurations.runtime
