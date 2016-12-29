@@ -132,6 +132,23 @@ sudo apt-get -f install
 redis-desktop-manager
 ```
 
+Dashboard
+---------
+Building
+```
+sudo apt-get install npm
+sudo npm install bower -g
+cd src/main/resources/dashboard/
+sudo bower install
+sudo npm install
+```
+
+Running
+```
+node ./
+```
+
+
 Resources
 ---------
 [SlideShare with good overview](http://www.slideshare.net/qiozas/big-data-streaming-processing-using-apache-storm-fosscomm-2016?next_slideshow=1)
