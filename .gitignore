@@ -217,3 +217,5 @@ gradle-app.setting
 
 #logs
 /logs
+/src/main/resources/dashboard/bower_components/jquery/
+/src/main/resources/dashboard/node_modules/
