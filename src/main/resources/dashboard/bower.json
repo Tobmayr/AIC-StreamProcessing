@@ -1,0 +1,15 @@
+{
+  "name": "web",
+  "description": "Taxi Fleet Monitoring Dashboard",
+  "main": "server.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1"
+  }
+}

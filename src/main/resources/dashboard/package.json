@@ -1,0 +1,12 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "description": "Taxi Fleet Monitoring Dashboard",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "socket.io": "^1.7.2"
+  }
+}
