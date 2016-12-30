@@ -106,6 +106,12 @@ task runDummyDataProvider (type: JavaExec){
     args "./testdata/taxi_data.csv"
 }
 
+task runDummyDataProvider (type: JavaExec){
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.kafka.provider.DummyDataProvider"
+    args "./testdata/taxi_data.csv"
+}
+
 task runRedisMonitor(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "at.ac.tuwien.aic.streamprocessing.cli.RedisMonitor"
