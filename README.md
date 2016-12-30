@@ -147,6 +147,18 @@ Running
 ```
 node ./
 ```
+Fixes for potential issues
+```
+#/usr/bin/env: node: No such file or directory
+ln -s /usr/bin/nodejs /usr/bin/node
+#then retry
+
+#"Cannot be run with sudo" message when exectuing sudo bower install
+# retry wiht --allow-root option
+sudo bower install --allow-root 
+
+
+```
 
 
 Resources
