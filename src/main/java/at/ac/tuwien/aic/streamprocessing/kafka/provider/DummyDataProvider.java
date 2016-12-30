@@ -2,6 +2,8 @@ package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HTTPUtil;
+
 import com.google.gson.Gson;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -21,6 +23,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * @author tobias
+ *
+ */
 public class DummyDataProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(DataProvider.class);
@@ -44,8 +50,8 @@ public class DummyDataProvider {
             while (recordIterator.hasNext()) {
                 Batch batch = getNextBatch(recordIterator, last, currentBatchStart);
 
-                //send json post request
-                sendPostRequest(gson.toJson(batch.entries));
+                // send json post request
+                HTTPUtil.sendJSONPostRequest("http://127.0.0.1:3000/add", gson.toJson(batch.entries));
 
                 if (batch.last != null) {
                     nextBatchStart = batch.last.getTimestamp();
@@ -89,9 +95,7 @@ public class DummyDataProvider {
                 return new Batch(entries, entry);
             }
 
-            long sameEntryCount = entries.stream()
-                    .filter(e -> e.getTaxiId() == entry.getTaxiId())
-                    .filter(e -> e.getTimestamp().isEqual(entry.getTimestamp()))
+            long sameEntryCount = entries.stream().filter(e -> e.getTaxiId() == entry.getTaxiId()).filter(e -> e.getTimestamp().isEqual(entry.getTimestamp()))
                     .count();
 
             if (sameEntryCount == 0) {
@@ -118,17 +122,6 @@ public class DummyDataProvider {
             logger.warn("Failed to parse record '" + record.toString() + "'");
             return null;
         }
-    }
-
-    private void sendPostRequest(String data) throws Exception {
-        HttpClient httpClient    = HttpClientBuilder.create().build();
-        HttpPost post          = new HttpPost("http://127.0.0.1:3000/add");
-        StringEntity postingString = new StringEntity(data);
-        post.setEntity(postingString);
-        post.setHeader("Content-type", "application/json");
-        HttpResponse response = httpClient.execute(post);
-        System.out.println(response.toString());
-
     }
 
     private static class Batch {

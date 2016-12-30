@@ -5,6 +5,7 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocationInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
@@ -157,6 +158,9 @@ public class TridentProcessingTopology {
 
         // setup topology
         Stream inputStream = topology.newStream(SPOUT_ID, spout);
+        
+        //propagate location information
+        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocationInformation(dashboardAdresss), new Fields());
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
@@ -256,12 +260,12 @@ public class TridentProcessingTopology {
 
     public static TridentProcessingTopology createWithListeners(BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener)
             throws Exception {
-        return new TridentProcessingTopology("taxi", "localhost", 6379, "localhost:3000", speedListener, avgSpeedListener, distanceListener);
+        return new TridentProcessingTopology("taxi", "localhost", 6379, "http://127.0.0.1:3000", speedListener, avgSpeedListener, distanceListener);
     }
 
     public static TridentProcessingTopology createWithTopicAndListeners(String topic, BaseFilter speedListener, BaseFilter avgSpeedListener,
             BaseFilter distanceListener) throws Exception {
-        return new TridentProcessingTopology(topic, "localhost", 6379, "localhost:3000", speedListener, avgSpeedListener, distanceListener);
+        return new TridentProcessingTopology(topic, "localhost", 6379, "http://127.0.0.1:3000", speedListener, avgSpeedListener, distanceListener);
     }
 
     public static void main(String[] args) throws Exception {
