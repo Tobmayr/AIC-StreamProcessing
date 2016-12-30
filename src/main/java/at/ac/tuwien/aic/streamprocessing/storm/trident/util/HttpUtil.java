@@ -10,11 +10,11 @@ import org.apache.storm.shade.org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HTTPUtil {
-    private static final Logger logger = LoggerFactory.getLogger(HTTPUtil.class);
+public class HttpUtil {
+    private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
    
 
-    private HTTPUtil() {
+    private HttpUtil() {
     }
 
     public static void sendJSONPostRequest(String uri, String data) {
@@ -25,7 +25,6 @@ public class HTTPUtil {
             post.setEntity(postingString);
             post.setHeader("Content-type", "application/json");
             HttpResponse response = httpClient.execute(post);
-            logger.info(response.toString());
         } catch (IOException e) {
             logger.error("Caught expcetion while trying to send a post request", e);
         }

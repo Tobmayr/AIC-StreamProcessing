@@ -13,7 +13,7 @@ import com.google.gson.Gson;
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.DashboardConstants;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HTTPUtil;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
 
 public class PropagateLocationInformation extends BaseFunction {
     private final Logger logger = LoggerFactory.getLogger(PropagateLocationInformation.class);
@@ -35,7 +35,7 @@ public class PropagateLocationInformation extends BaseFunction {
         TaxiEntry entry = new TaxiEntry(id, Timestamp.parse(timestamp), latitude, longitude);
         String data = gson.toJson(Arrays.asList(entry));
         logger.info("JSON: " + data);
-        HTTPUtil.sendJSONPostRequest(dashboardAdress + DashboardConstants.PROPAGATE_LOCATION_URI, data);
+        HttpUtil.sendJSONPostRequest(dashboardAdress + DashboardConstants.PROPAGATE_LOCATION_URI, data);
     }
 
 }

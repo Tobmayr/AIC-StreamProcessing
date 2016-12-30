@@ -2,7 +2,7 @@ package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
 import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HTTPUtil;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
 
 import com.google.gson.Gson;
 import org.apache.commons.csv.CSVFormat;
@@ -23,10 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * @author tobias
- *
- */
+
 public class DummyDataProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(DataProvider.class);
@@ -51,7 +48,7 @@ public class DummyDataProvider {
                 Batch batch = getNextBatch(recordIterator, last, currentBatchStart);
 
                 // send json post request
-                HTTPUtil.sendJSONPostRequest("http://127.0.0.1:3000/add", gson.toJson(batch.entries));
+                HttpUtil.sendJSONPostRequest("http://127.0.0.1:3000/add", gson.toJson(batch.entries));
 
                 if (batch.last != null) {
                     nextBatchStart = batch.last.getTimestamp();
