@@ -33,7 +33,8 @@ socket.on('incident', function (data) {
     }
     $("#speedingIncidents").empty();
     for (var taxiId in incidents) {
-        $("#speedingIncidents").append('<li>Taxi ' + taxiId + ' (' + incidents[taxiId] + ' km/h)' + '</li>');
+        var speed= parseFloat(incidents[taxiId]).toFixed(2)
+        $("#speedingIncidents").append('<li>Taxi ' + taxiId + ' (' + speed + ' km/h)' + '</li>');
     }
 
 

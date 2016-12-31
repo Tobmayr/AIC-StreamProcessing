@@ -1,23 +1,5 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
-import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocationInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateUpdater;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AvgSpeedQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -33,6 +15,26 @@ import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocationInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateUpdater;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AvgSpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import redis.clients.jedis.Jedis;
 import redis.embedded.RedisServer;
 
@@ -47,7 +49,7 @@ public class TridentProcessingTopology {
     private final String redisHost;
     private final int redisPort;
 
-    private final String dashboardAdresss;
+    private final String dashbaordAdress;
 
     private final BaseFilter speedTupleListener;
     private final BaseFilter avgSpeedTupleListener;
@@ -64,7 +66,7 @@ public class TridentProcessingTopology {
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
-        this.dashboardAdresss = dashboardAdress;
+        this.dashbaordAdress = dashboardAdress;
 
         this.speedTupleListener = null;
         this.avgSpeedTupleListener = null;
@@ -73,7 +75,7 @@ public class TridentProcessingTopology {
 
     public TridentProcessingTopology(String topic, String redisHost, int redisPort, String dashboardAdress, BaseFilter speedTupleListener,
             BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
-        this.dashboardAdresss = dashboardAdress;
+        this.dashbaordAdress = dashboardAdress;
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
@@ -158,9 +160,9 @@ public class TridentProcessingTopology {
 
         // setup topology
         Stream inputStream = topology.newStream(SPOUT_ID, spout);
-        
-        //propagate location information
-        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocationInformation(dashboardAdresss), new Fields());
+
+        // propagate location information
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocationInformation(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
@@ -179,9 +181,12 @@ public class TridentProcessingTopology {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
 
+        // notify dashboard if vehicle is speeding
+        speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
+        
         // setup average speed aggregator
         TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort));
-        Stream avgSpeedStream = speedStream.project(TaxiFields.ID_AND_SPEED_FIELDS)
+        Stream avgSpeedStream = speedStream
                 .stateQuery( // query the state for each taxi id
                         avgSpeed, ID, new AvgSpeedQuery(), TaxiFields.AVG_SPEED_STATE_FIELDS)
                 .partitionAggregate( // batch-process entries
