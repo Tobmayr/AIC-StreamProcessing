@@ -125,8 +125,8 @@ public class DataProvider {
         try {
             Integer taxiId = Integer.parseInt(record.get(0));
             LocalDateTime timestamp = Timestamp.parse(record.get(1));
-            double latitude = Double.parseDouble(record.get(2));
-            double longitude = Double.parseDouble(record.get(3));
+            double latitude = Double.parseDouble(record.get(3));
+            double longitude = Double.parseDouble(record.get(2));
 
             return new TaxiEntry(taxiId, timestamp, latitude, longitude);
         } catch (NumberFormatException e) {
