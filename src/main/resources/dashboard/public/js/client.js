@@ -61,13 +61,10 @@ function initMap() {
 };
 
 function createOrMoveMarker(map, taxiId, lat, lng) {
-    for (var i = 0; i < markers.length; i++) {
-        if (markers[i].taxiId == taxiId) {
-            markers[i].setPosition(new google.maps.LatLng(lat, lng));
-            return;
-        }
+    if (markers[taxiId]!=undefined){
+        markers[taxiId].setPosition(new google.maps.LatLng(lat, lng));
+        return;
     }
-    ;
     var icon = {
         url: "img/car.png",
         scaledSize: new google.maps.Size(20, 20), // scaled size
@@ -75,8 +72,7 @@ function createOrMoveMarker(map, taxiId, lat, lng) {
         anchor: new google.maps.Point(0, 0)
     }
     var marker = new google.maps.Marker({position: new google.maps.LatLng(lat, lng), map: map, icon: icon});
-    marker.taxiId = taxiId;
-    markers.push(marker);
+    markers[taxiId]=marker;
 };
 
 function removeMarker(map, taxiId) {
