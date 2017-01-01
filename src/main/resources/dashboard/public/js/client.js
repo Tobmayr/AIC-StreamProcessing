@@ -1,15 +1,13 @@
 var map;
 var markers = [];
 var incidents = [];
+var violations = [];
 
 // handle requests for updating the UI
 var socket = io.connect('http://localhost:3000');
 
 socket.on('add', function (data) {
-    for (var i = 0; i < data.length; i++) {
-        createOrMoveMarker(map, data[i].taxiId, data[i].latitude, data[i].longitude);
-    }
-    ;
+    createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
 });
 
 socket.on('driving', function (data) {
@@ -21,23 +19,17 @@ socket.on('distance', function (data) {
 });
 
 socket.on('violation', function (data) {
-    for (var i = 0; i < data.length; i++) {
-        $("#areaViolations").append('<li>Taxi ' + data[i].taxiId + '</li>');
+    violations[data.taxiId] = data.distance;
+    if (data.distance >= 15.00) {
+        removeTaxi(data.taxiId);
+        reloadIncidentList();
     }
-    ;
+    reloadViolationsList();
 });
 
 socket.on('incident', function (data) {
-    for (var i = 0; i < data.length; i++) {
-        incidents[data[i].taxiId] = data[i].speed;
-    }
-    $("#speedingIncidents").empty();
-    for (var taxiId in incidents) {
-        var speed= parseFloat(incidents[taxiId]).toFixed(2)
-        $("#speedingIncidents").append('<li>Taxi ' + taxiId + ' (' + speed + ' km/h)' + '</li>');
-    }
-
-
+    incidents[data.taxiId] = data.speed;
+    reloadIncidentList();
 });
 
 
@@ -62,7 +54,7 @@ function initMap() {
 };
 
 function createOrMoveMarker(map, taxiId, lat, lng) {
-    if (markers[taxiId]!=undefined){
+    if (markers[taxiId] != undefined) {
         markers[taxiId].setPosition(new google.maps.LatLng(lat, lng));
         return;
     }
@@ -73,10 +65,31 @@ function createOrMoveMarker(map, taxiId, lat, lng) {
         anchor: new google.maps.Point(0, 0)
     }
     var marker = new google.maps.Marker({position: new google.maps.LatLng(lat, lng), map: map, icon: icon});
-    markers[taxiId]=marker;
+    markers[taxiId] = marker;
 };
+function reloadViolationsList() {
+    $("#areaViolations").empty();
+    for (var taxiId in violations) {
+        var distance = parseFloat(violations[taxiId]).toFixed(2);
+        $("#areaViolations").append('<li>Taxi ' + taxiId + ' (' + distance + ' km)' + '</li>');
+    }
+}
 
-function removeMarker(map, taxiId) {
-    //TODO
+function reloadIncidentList() {
+    $("#speedingIncidents").empty();
+    for (var taxiId in incidents) {
+        var speed = parseFloat(incidents[taxiId]).toFixed(2)
+        $("#speedingIncidents").append('<li>Taxi ' + taxiId + ' (' + speed + ' km/h)' + '</li>');
+    }
+}
+function removeTaxi(taxiId) {
+    if (markers[taxiId] != undefined) {
+        markers[taxiId].setMap(null);
+        //Remove all taxi references
+        markers.splice(taxiId, 1);
+        violations.splice(taxiId, 1);
+        incidents.splice(taxiId, 1);
+    }
+
 };
 

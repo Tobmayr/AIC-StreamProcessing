@@ -1,11 +1,13 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
 
-import org.apache.storm.trident.operation.BaseFilter;
-import org.apache.storm.trident.tuple.TridentTuple;
-
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
+import org.apache.storm.trident.operation.BaseFilter;
+import org.apache.storm.trident.tuple.TridentTuple;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AreaLeavingNotifier extends BaseFilter {
 
@@ -31,7 +33,10 @@ public class AreaLeavingNotifier extends BaseFilter {
     }
 
     private String toJSON(Integer taxiId, Double distance) {
-        return String.format("[{\"taxiId\":\"%s\",\"distance\":\"%s\"}]", taxiId, distance);
+        Map<String, String> map = new HashMap<>();
+        map.put("taxiId", Integer.toString(taxiId));
+        map.put("distance", Double.toString(distance));
+        return HttpUtil.toJSON(map);
     }
 
 }

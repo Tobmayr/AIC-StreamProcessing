@@ -1,12 +1,14 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PropagateLocationInformation extends BaseFilter {
     private final Logger logger = LoggerFactory.getLogger(PropagateLocationInformation.class);
@@ -30,6 +32,10 @@ public class PropagateLocationInformation extends BaseFilter {
     }
 
     private String toJSON(Integer taxiId, Double latitude, Double longitude) {
-        return String.format("[{\"taxiId\":\"%s\",\"latitude\":\"%s\",\"longitude\":\"%s\"}]", taxiId, latitude, longitude);
+        Map<String, String> map = new HashMap<>();
+        map.put("taxiId", Integer.toString(taxiId));
+        map.put("latitude", Double.toString(latitude));
+        map.put("longitude", Double.toString(longitude));
+        return HttpUtil.toJSON(map);
     }
 }

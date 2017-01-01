@@ -1,5 +1,25 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
+import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
+import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocationInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateUpdater;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AvgSpeedQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateQuery;
+import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -15,26 +35,6 @@ import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
-import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocationInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateFactory;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.StateUpdater;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AvgSpeedQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateQuery;
-import at.ac.tuwien.aic.streamprocessing.storm.tuple.TaxiFields;
 import redis.clients.jedis.Jedis;
 import redis.embedded.RedisServer;
 
@@ -74,7 +74,7 @@ public class TridentProcessingTopology {
     }
 
     public TridentProcessingTopology(String topic, String redisHost, int redisPort, String dashboardAdress, BaseFilter speedTupleListener,
-            BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
+                                     BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
         this.dashbaordAdress = dashboardAdress;
         this.topic = topic;
         this.redisHost = redisHost;
@@ -164,6 +164,9 @@ public class TridentProcessingTopology {
         // propagate location information
         inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocationInformation(dashbaordAdress));
 
+        // notify dashboard of occurring area violations
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
+
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
         Stream speedStream = inputStream
@@ -183,7 +186,7 @@ public class TridentProcessingTopology {
 
         // notify dashboard if vehicle is speeding
         speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
-        
+
         // setup average speed aggregator
         TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort));
         Stream avgSpeedStream = speedStream
@@ -269,7 +272,7 @@ public class TridentProcessingTopology {
     }
 
     public static TridentProcessingTopology createWithTopicAndListeners(String topic, BaseFilter speedListener, BaseFilter avgSpeedListener,
-            BaseFilter distanceListener) throws Exception {
+                                                                        BaseFilter distanceListener) throws Exception {
         return new TridentProcessingTopology(topic, "localhost", 6379, "http://127.0.0.1:3000", speedListener, avgSpeedListener, distanceListener);
     }
 

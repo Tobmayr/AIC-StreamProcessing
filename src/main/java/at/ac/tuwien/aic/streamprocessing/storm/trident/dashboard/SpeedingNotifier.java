@@ -1,10 +1,12 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SpeedingNotifier extends BaseFilter {
 
@@ -26,7 +28,10 @@ public class SpeedingNotifier extends BaseFilter {
     }
 
     private String toJSON(Integer taxiId, Double speed) {
-        return String.format("[{\"taxiId\":\"%s\",\"speed\":\"%s\"}]", taxiId, speed);
+        Map<String, String> map = new HashMap<>();
+        map.put("taxiId", Integer.toString(taxiId));
+        map.put("speed", Double.toString(speed));
+        return HttpUtil.toJSON(map);
     }
 
 }
