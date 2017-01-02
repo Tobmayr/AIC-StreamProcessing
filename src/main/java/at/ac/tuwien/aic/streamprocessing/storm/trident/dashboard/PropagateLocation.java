@@ -1,20 +1,21 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.HttpUtil;
 
-public class PropagateLocationInformation extends BaseFilter {
-    private final Logger logger = LoggerFactory.getLogger(PropagateLocationInformation.class);
+public class PropagateLocation extends BaseFilter {
+    private final Logger logger = LoggerFactory.getLogger(PropagateLocation.class);
     private String dashboardAdress;
 
-    public PropagateLocationInformation(String dashboardAdress) {
+    public PropagateLocation(String dashboardAdress) {
         super();
         this.dashboardAdress = dashboardAdress;
 

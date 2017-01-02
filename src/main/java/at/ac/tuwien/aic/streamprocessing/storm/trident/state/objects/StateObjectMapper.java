@@ -8,7 +8,6 @@ public interface StateObjectMapper<T extends StateObject> {
 
     Values createInitialStateTuple();
 
-
     T fromTuple(TridentTuple tuple);
 
     Values toTuple(Integer id, T state);
