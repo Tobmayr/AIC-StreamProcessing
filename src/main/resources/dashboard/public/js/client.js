@@ -10,12 +10,9 @@ socket.on('add', function (data) {
     createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
 });
 
-socket.on('driving', function (data) {
-    $("#currentlyDrivingTaxis").text(data.nrOfTaxis);
-});
-
-socket.on('distance', function (data) {
-    $("#overallDistance").text(data.distance + ' km');
+socket.on('stats', function (data) {
+    $("#currentlyDrivingTaxis").text(data.taxiCount);
+    $("#overallDistance").text(parseFloat(data.distance).toFixed(2) + ' km');
 });
 
 socket.on('violation', function (data) {

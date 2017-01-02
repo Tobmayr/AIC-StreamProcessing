@@ -21,17 +21,10 @@ app.post('/add', function (req, res) {
    res.send('success');
 });
 
-// update number of currently driving taxis
-app.post('/driving', function (req, res) {
+// update number of currently driving taxis and overall distance
+app.post('/stats', function (req, res) {
    console.log(req.body);
-   io.sockets.emit('driving', req.body);
-   res.send('success');
-});
-
-// update overall distance of all taxis
-app.post('/distance', function (req, res) {
-   console.log(req.body);
-   io.sockets.emit('distance', req.body);
+   io.sockets.emit('stats', req.body);
    res.send('success');
 });
 
