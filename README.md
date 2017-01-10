@@ -136,16 +136,15 @@ Dashboard
 ---------
 Building
 ```
-sudo apt-get install npm
-sudo npm install bower -g
+sudo apt install npm
 cd src/main/resources/dashboard/
-sudo bower install
-sudo npm install
+npm install
+npm setup
 ```
 
 Running
 ```
-node ./
+npm start
 ```
 Fixes for potential issues
 ```
