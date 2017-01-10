@@ -124,3 +124,8 @@ task stormJar(type: Jar) {
     exclude "META-INF/*.RSA"
     with jar
 }
+
+task startDashboard(type: Exec){
+    workingDir './src/main/resources/dashboard'
+    commandLine 'npm', 'start'
+}
