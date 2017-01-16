@@ -42,6 +42,13 @@ app.post('/incident', function (req, res) {
    res.send('success');
 });
 
+// taxi has stopped driving
+app.post('/stop', function (req, res) {
+    console.log(req.body);
+    io.sockets.emit('stop', req.body);
+    res.send('success');
+});
+
 server.listen(3000, function () {
    console.log('Server started on port 3000')
 });

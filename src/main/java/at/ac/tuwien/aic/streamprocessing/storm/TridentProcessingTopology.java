@@ -23,10 +23,11 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAver
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateTaxiCountAndDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.AreaLeavingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.DrivingTaxiFilter;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.PropagateInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.PropagateLocation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.SpeedingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
@@ -163,7 +164,7 @@ public class TridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).groupBy(TaxiFields.ID_ONLY_FIELDS).toStream();
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).groupBy(TaxiFields.ID_ONLY_FIELDS).toStream().filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // propagate location information
         inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
