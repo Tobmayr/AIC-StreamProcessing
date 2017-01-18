@@ -25,11 +25,15 @@ socket.on('violation', function (data) {
 });
 
 socket.on('incident', function (data) {
+    removeTaxi(data.taxiId);
+    reloadIncidentList();
+    reloadViolationsList();
+});
+
+socket.on('stop', function (data) {
     incidents[data.taxiId] = data.speed;
     reloadIncidentList();
 });
-
-
 // google maps
 function initMap() {
     var forbiddenCity = new google.maps.LatLng(39.916320, 116.397155);

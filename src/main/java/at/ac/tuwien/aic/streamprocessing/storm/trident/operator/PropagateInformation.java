@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.operator;
 
 import java.util.HashMap;
 import java.util.Map;

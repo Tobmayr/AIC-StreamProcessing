@@ -1,4 +1,4 @@
-package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
+package at.ac.tuwien.aic.streamprocessing.storm.trident.operator;
 
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Config;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
