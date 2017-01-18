@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.*;
 
 public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
 
+    @Ignore
     @Test
     public void test_stationaryTaxi_yieldCorrectValues() throws Exception {
         // model a stationary taxi
@@ -40,6 +41,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(collectDistance(1), contains(0.0, 0.0));
     }
 
+    @Ignore
     @Test
     public void test_simpleMoving_yieldsCorrectValues() throws Exception {
         // model a moving taxi
@@ -63,6 +65,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(collectDistance(1), contains(dist1, dist1 + dist2));
     }
 
+    @Ignore
     @Test
     public void test_simpleMoving_inBatches_yieldsCorrectValues() throws Exception {
         // model a moving taxi
@@ -93,6 +96,7 @@ public class BasicTridentTopologyTest extends AbstractTridentTopologyTest {
         assertThat(collectDistance(1), contains(dist, 2*dist, 3*dist));
     }
 
+    @Ignore
     @Test
     public void test_multipleMoving_yieldsCorrectValues() throws Exception {
         // model a moving taxi
