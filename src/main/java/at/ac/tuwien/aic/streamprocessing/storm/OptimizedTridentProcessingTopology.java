@@ -170,7 +170,7 @@ public class OptimizedTridentProcessingTopology {
         inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
 
         // propagate location information
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
+        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
