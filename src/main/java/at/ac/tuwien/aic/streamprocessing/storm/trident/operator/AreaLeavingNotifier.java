@@ -28,6 +28,7 @@ public class AreaLeavingNotifier extends BaseFilter {
         if (distance >= Config.WARNING_DISTANCE) {
             String data = toJSON(taxiId, distance);
             HttpUtil.sendJSONPostRequest(dashboardAdress + Config.NOTIFY_AREA_VIOLATION_URI, data);
+            return false;
         }
         return true;
     }
