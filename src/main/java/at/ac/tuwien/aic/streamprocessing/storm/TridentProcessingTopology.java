@@ -167,10 +167,10 @@ public class TridentProcessingTopology {
         Stream inputStream = topology.newStream(SPOUT_ID, spout).groupBy(TaxiFields.ID_ONLY_FIELDS).toStream().filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // propagate location information
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
+        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
 
         // notify dashboard of occurring area violations
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
+        inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
