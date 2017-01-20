@@ -306,10 +306,16 @@ public class TridentProcessingTopology {
                 return true;
             }
         };
+        TridentProcessingTopology topology = null;
+        try {
+            topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
+            topology.submitLocalCluster();
+        } finally {
+            if (topology != null) {
+                Runtime.getRuntime().addShutdownHook(new Thread(topology::stop));
+            }
 
-        TridentProcessingTopology topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
-        topology.submitLocalCluster();
+        }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(topology::stop));
     }
 }
