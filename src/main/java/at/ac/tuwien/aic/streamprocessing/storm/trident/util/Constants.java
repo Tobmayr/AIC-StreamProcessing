@@ -1,7 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.util;
 
-public class Config {
-    private Config() {
+public class Constants {
+    private Constants() {
 
     }
 
@@ -12,6 +12,9 @@ public class Config {
 
     // Speeding configuration
     public static final Double SPEED_LIMIT = 50D;
+    
+    //Long/Lat value which signals stop
+    public static final Double STOP_TOKEN_VALUE=360D;
 
     // Dashboard sub-URI configuration
     public static final String PROPAGATE_LOCATION_URI = "/add";

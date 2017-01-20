@@ -23,11 +23,11 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAver
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateTaxiCountAndDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.AreaLeavingNotifier;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.DrivingTaxiFilter;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.PropagateInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.PropagateLocation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.operator.SpeedingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocation;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
@@ -188,7 +188,7 @@ public class TridentProcessingTopology {
         if (speedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
-
+        
         // notify dashboard if vehicle is speeding
         speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
 
@@ -306,16 +306,19 @@ public class TridentProcessingTopology {
                 return true;
             }
         };
-        TridentProcessingTopology topology = null;
-        try {
-            topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
+        TridentProcessingTopology topology=null;
+        try{
+             topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
             topology.submitLocalCluster();
-        } finally {
-            if (topology != null) {
-                Runtime.getRuntime().addShutdownHook(new Thread(topology::stop));
+        }finally{
+            if(topology!=null){
+                Runtime.getRuntime().addShutdownHook(new Thread(topology::stop)); 
             }
-
+        
         }
 
+       
+
+      
     }
 }
