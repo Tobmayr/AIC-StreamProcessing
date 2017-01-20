@@ -1,5 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,19 +11,30 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Constants;
 
 public class PropagateInformation extends DashboardNotifier {
 
-    public PropagateInformation(String dashboardAddress) {
-       super(dashboardAddress + Constants.PROPAGATE_INFORMATION_URI);
-    }
+	private Map<Integer, Double> idDistanceMap = Collections.synchronizedMap(new HashMap<Integer, Double>());
 
-    @Override
-    public boolean isKeep(TridentTuple tuple) {
-        InformationState information = (InformationState) tuple.get(0);
-        Map<String, String> map = new HashMap<>();
-        map.put("taxiCount", Integer.toString(information.getTaxiCount()));
-        map.put("distance", Double.toString(information.getDistance()));
-        sendJSONPostRequest(map);
+	public PropagateInformation(String dashboardAddress) {
+		super(dashboardAddress + Constants.PROPAGATE_INFORMATION_URI);
+	}
 
-        return true;
-    }
+	@Override
+	public boolean isKeep(TridentTuple tuple) {
+		Integer taxiID = tuple.getIntegerByField("id");
+		Double distance = tuple.getDoubleByField("distance");
+		Double prevDistance = idDistanceMap.put(taxiID, distance);
+		if (prevDistance == null || prevDistance != distance) {
+			updateDashboard(idDistanceMap.size(),
+					idDistanceMap.values().stream().mapToDouble(Double::doubleValue).sum());
+		}
+
+		return true;
+	}
+
+	public void updateDashboard(Integer count, Double distance) {
+		Map<String, String> map = new HashMap<>();
+		map.put("taxiCount", Integer.toString(count));
+		map.put("distance", Double.toString(distance));
+		sendJSONPostRequest(map);
+	}
 
 }

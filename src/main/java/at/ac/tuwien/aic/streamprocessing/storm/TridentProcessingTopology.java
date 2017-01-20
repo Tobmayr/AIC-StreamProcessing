@@ -225,9 +225,8 @@ public class TridentProcessingTopology {
                 new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
 
         // aggregate amount of taxis + overall distance and propagate to dashboard
-        Stream dashbaordStream = distanceStream.persistentAggregate(new MemoryMapState.Factory(), TaxiFields.INFORMATION_INPUT_FIELDS,
-                new CalculateTaxiCountAndDistance(), TaxiFields.INFORMATION_OUTPUT_FIELDS).newValuesStream();
-        dashbaordStream.filter(TaxiFields.INFORMATION_OUTPUT_FIELDS, new PropagateInformation(dashbaordAdress));
+
+        distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashbaordAdress));
 
         return topology.build();
     }
@@ -259,7 +258,7 @@ public class TridentProcessingTopology {
     public void submitLocalCluster() {
         Config conf = new Config();
         conf.setDebug(false);
-        conf.setMaxTaskParallelism(1);
+        conf.setMaxTaskParallelism(5);
 
         startKafka();
         startRedis();
