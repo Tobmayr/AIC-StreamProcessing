@@ -137,9 +137,10 @@ Dashboard
 Building
 ```
 sudo apt install npm
+npm install bower -g
 cd src/main/resources/dashboard/
+bower install
 npm install
-npm setup
 ```
 
 Running
@@ -155,6 +156,11 @@ ln -s /usr/bin/nodejs /usr/bin/node
 #"Cannot be run with sudo" message when exectuing sudo bower install
 # retry wiht --allow-root option
 sudo bower install --allow-root 
+
+#If there are problems with permissions such as "EACCES: permission denied .config/configstore/bower-github.json"
+sudo chown -R $USER:$GROUP ~/.npm
+sudo chown -R $USER:$GROUP ~/.config
+#then run bower install again
 ```
 
 VM setup
