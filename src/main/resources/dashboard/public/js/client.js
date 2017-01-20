@@ -24,13 +24,13 @@ socket.on('violation', function (data) {
     reloadViolationsList();
 });
 
-socket.on('incident', function (data) {
+socket.on('stop', function (data) {
     removeTaxi(data.taxiId);
     reloadIncidentList();
     reloadViolationsList();
 });
 
-socket.on('stop', function (data) {
+socket.on('incident', function (data) {
     incidents[data.taxiId] = data.speed;
     reloadIncidentList();
 });
