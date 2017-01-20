@@ -15,6 +15,9 @@ public class Constants {
     
     //Long/Lat value which signals stop
     public static final Double STOP_TOKEN_VALUE=360D;
+    
+    //Time in ms for periodically sending taxi location information to dashboard
+    public static final Long  PROPAGATE_LOCATION_PERIOD=5000L;
 
     // Dashboard sub-URI configuration
     public static final String PROPAGATE_LOCATION_URI = "/add";
