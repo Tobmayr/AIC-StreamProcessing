@@ -47,7 +47,6 @@ public class TridentProcessingTopology {
     private final Logger logger = LoggerFactory.getLogger(TridentProcessingTopology.class);
 
     private static final String SPOUT_ID = "kafka-spout";
-    public static final Fields ID = new Fields("id");
 
     private String topic;
 
@@ -164,7 +163,8 @@ public class TridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).groupBy(TaxiFields.ID_ONLY_FIELDS).toStream().filter(new DrivingTaxiFilter(dashbaordAdress));
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5)
+                .filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // propagate location information
         inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
@@ -174,36 +174,30 @@ public class TridentProcessingTopology {
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
-        Stream speedStream = inputStream
-                .stateQuery( // query the state for each taxi id
-                        speed, ID, new SpeedStateQuery(), TaxiFields.SPEED_STATE_FIELDS)
-                .partitionAggregate( // batch-process entries
-                        TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new CalculateSpeed(), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS)
-                .toStream();
+        Stream speedStream = inputStream.stateQuery( // query the state for each taxi id
+                speed, TaxiFields.ID_ONLY_FIELDS, new SpeedStateQuery(), TaxiFields.SPEED_STATE_FIELDS).partitionAggregate( // batch-process entries
+                        TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new CalculateSpeed(), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS);
 
         // update the new speed states
         speedStream.partitionPersist(StateFactory.createSpeedStateFactory(redisHost, redisPort), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS,
-                new StateUpdater<RedisState<SpeedState>>()).newValuesStream();
+                new StateUpdater<RedisState<SpeedState>>());
 
         if (speedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
-        
+
         // notify dashboard if vehicle is speeding
-        speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
+        speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
 
         // setup average speed aggregator
         TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort));
-        Stream avgSpeedStream = speedStream
-                .stateQuery( // query the state for each taxi id
-                        avgSpeed, ID, new AvgSpeedQuery(), TaxiFields.AVG_SPEED_STATE_FIELDS)
-                .partitionAggregate( // batch-process entries
-                        TaxiFields.AVG_SPEED_INPUT_FIELDS, new CalculateAverageSpeed(), TaxiFields.AVG_SPEED_OUTPUT_FIELDS)
-                .toStream();
+        Stream avgSpeedStream = speedStream.stateQuery( // query the state for each taxi id
+                avgSpeed, TaxiFields.ID_ONLY_FIELDS, new AvgSpeedQuery(), TaxiFields.AVG_SPEED_STATE_FIELDS).partitionAggregate( // batch-process entries
+                        TaxiFields.AVG_SPEED_INPUT_FIELDS, new CalculateAverageSpeed(), TaxiFields.AVG_SPEED_OUTPUT_FIELDS);
 
         // update the new average speed states
         avgSpeedStream.partitionPersist(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort), TaxiFields.AVG_SPEED_OUTPUT_FIELDS,
-                new StateUpdater<RedisState<AverageSpeedState>>()).newValuesStream();
+                new StateUpdater<RedisState<AverageSpeedState>>());
 
         if (avgSpeedTupleListener != null) {
             avgSpeedStream = avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, avgSpeedTupleListener);
@@ -214,27 +208,24 @@ public class TridentProcessingTopology {
 
         // setup distance aggregator
         TridentState distance = topology.newStaticState(StateFactory.createDistanceStateFactory(redisHost, redisPort));
-        Stream distanceStream = inputStream
-                .stateQuery( // query the state for each taxi id
-                        distance, ID, new DistanceQuery(), TaxiFields.DISTANCE_STATE_FIELDS)
-                .partitionAggregate( // batch-process entries
-                        TaxiFields.CALCULATE_DISTANCE_INPUT_FIELDS, new CalculateDistance(), TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS)
-                .toStream();
+        Stream distanceStream = inputStream.stateQuery( // query the state for each taxi id
+                distance, TaxiFields.ID_ONLY_FIELDS, new DistanceQuery(), TaxiFields.DISTANCE_STATE_FIELDS).partitionAggregate( // batch-process entries
+                        TaxiFields.CALCULATE_DISTANCE_INPUT_FIELDS, new CalculateDistance(), TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS);
 
         // update the new distance states
         distanceStream.partitionPersist(StateFactory.createDistanceStateFactory(redisHost, redisPort), TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS,
-                new StateUpdater<RedisState<DistanceState>>()).newValuesStream();
+                new StateUpdater<RedisState<DistanceState>>());
 
         if (distanceTupleListener != null) {
             distanceStream = distanceStream.toStream().each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS, distanceTupleListener);
         }
 
         // forward distance to redis
-        Stream dashbaordStream = distanceStream.each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS,
+        distanceStream.each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS,
                 new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
 
         // aggregate amount of taxis + overall distance and propagate to dashboard
-        dashbaordStream = dashbaordStream.persistentAggregate(new MemoryMapState.Factory(), TaxiFields.INFORMATION_INPUT_FIELDS,
+        Stream dashbaordStream = distanceStream.persistentAggregate(new MemoryMapState.Factory(), TaxiFields.INFORMATION_INPUT_FIELDS,
                 new CalculateTaxiCountAndDistance(), TaxiFields.INFORMATION_OUTPUT_FIELDS).newValuesStream();
         dashbaordStream.filter(TaxiFields.INFORMATION_OUTPUT_FIELDS, new PropagateInformation(dashbaordAdress));
 
@@ -306,19 +297,16 @@ public class TridentProcessingTopology {
                 return true;
             }
         };
-        TridentProcessingTopology topology=null;
-        try{
-             topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
+        TridentProcessingTopology topology = null;
+        try {
+            topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
             topology.submitLocalCluster();
-        }finally{
-            if(topology!=null){
-                Runtime.getRuntime().addShutdownHook(new Thread(topology::stop)); 
+        } finally {
+            if (topology != null) {
+                Runtime.getRuntime().addShutdownHook(new Thread(topology::stop));
             }
-        
+
         }
 
-       
-
-      
     }
 }
