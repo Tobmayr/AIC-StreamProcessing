@@ -7,8 +7,6 @@ var violations = [];
 var socket = io.connect('http://localhost:3000');
 
 socket.on('add', function (data) {
-	  $("#currentlyDrivingTaxis").text(markers.length);
-	  
     createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
 });
 
