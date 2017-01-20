@@ -7,6 +7,8 @@ var violations = [];
 var socket = io.connect('http://localhost:3000');
 
 socket.on('add', function (data) {
+	  $("#currentlyDrivingTaxis").text(markers.length);
+	  
     createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
 });
 
@@ -87,9 +89,9 @@ function removeTaxi(taxiId) {
     if (markers[taxiId] != undefined) {
         markers[taxiId].setMap(null);
         //Remove all taxi references
-        markers.splice(taxiId, 1);
-        violations.splice(taxiId, 1);
-        incidents.splice(taxiId, 1);
+        delete markers[taxiId];
+        delete violations[taxiId];
+        delete incidents[taxiId];
     }
 
 };
