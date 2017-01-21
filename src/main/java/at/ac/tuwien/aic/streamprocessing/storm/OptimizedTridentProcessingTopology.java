@@ -1,6 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifierAndLocationPropagator;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedCalculateSpeedAndSpeedingNotifier;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -20,10 +21,8 @@ import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.RedisState;
@@ -165,11 +164,11 @@ public class OptimizedTridentProcessingTopology {
         // notify dashboard of occurring area violations
         inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifierAndLocationPropagator(dashbaordAdress));
 
-        // setup speed aggregator
+        // setup speed aggregator and notify dashboard if taxi is speeding
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
         Stream speedStream = inputStream.stateQuery( // query the state for each taxi id
                 speed, TaxiFields.ID_ONLY_FIELDS, new SpeedStateQuery(), TaxiFields.SPEED_STATE_FIELDS).partitionAggregate( // batch-process entries
-                TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new CalculateSpeed(), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS);
+                TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new OptimizedCalculateSpeedAndSpeedingNotifier(dashbaordAdress), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS);
 
         // update the new speed states
         speedStream.partitionPersist(StateFactory.createSpeedStateFactory(redisHost, redisPort), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS,
@@ -179,8 +178,6 @@ public class OptimizedTridentProcessingTopology {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
 
-        // notify dashboard if vehicle is speeding
-        speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
 
         // setup average speed aggregator
         TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort));
