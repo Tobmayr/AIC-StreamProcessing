@@ -114,7 +114,7 @@ public class DataProvider {
             } else {
                 // duplicate entries for one taxi at the same moment
                 // disregard it as it will computing meaningful values impossible
-                // logger.debug("Filtered same-time entry for taxi " + entry.getTaxiId() + ": " + entry.toString());
+                logger.debug("Filtered same-time entry for taxi " + entry.getTaxiId() + ": " + entry.toString());
             }
         }
 

@@ -54,7 +54,7 @@ public class TupleSpeedMonitor implements Filter {
         jedis.set(prefix + "_tuples_per_second", s);
         jedis.close();
 
-        logger.debug(prefix + ":" + counter + " tuples (" + s + " tuples/s)");
+        logger.info(prefix + ":" + counter + " tuples (" + s + " tuples/s)");
     }
 
     @Override
