@@ -9,6 +9,7 @@ public class Constants {
     public static final Double ALLOWED_AREA_CENTER_LAT = 39.916320;
     public static final Double ALLOWED_AREA_CENTER_LONG = 116.397155;
     public static final Double WARNING_DISTANCE = 10D;
+    public static final Double BORDER_DISTANCE = 15D;
 
     // Speeding configuration
     public static final Double SPEED_LIMIT = 50D;
