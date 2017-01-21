@@ -30,7 +30,7 @@ public class StoreInformation extends BaseFilter {
         if (!key.isEmpty() && !value.isEmpty()) {
             Jedis jedis = new Jedis(redisHost, redisPort);
             jedis.set(key, value);
-            logger.debug("Set key {} with value {}", key, value);
+            // logger.debug("Set key {} with value {}", key, value);
             jedis.close();
         }
         return true;
