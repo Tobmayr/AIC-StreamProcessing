@@ -170,9 +170,6 @@ public class OptimizedTridentProcessingTopology {
         // notify dashboard of occurring area violations
         inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifier(dashbaordAdress));
 
-        // propagate location information
-        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
-
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
         Stream speedStream = inputStream.stateQuery( // query the state for each taxi id
