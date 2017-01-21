@@ -1,7 +1,8 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifier;
+
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.performance.TupleSpeedMonitor;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifierAndLocationPropagator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -24,7 +25,6 @@ import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDist
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
@@ -173,10 +173,7 @@ public class OptimizedTridentProcessingTopology {
                 .filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // notify dashboard of occurring area violations
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifier(dashbaordAdress));
-
-        // propagate location information
-        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifierAndLocationPropagator(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
