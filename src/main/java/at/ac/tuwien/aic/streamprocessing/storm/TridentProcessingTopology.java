@@ -210,10 +210,6 @@ public class TridentProcessingTopology {
             avgSpeedStream = avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, avgSpeedTupleListener);
         }
 
-        if (BENCHMARK) {
-            avgSpeedStream.filter(new TupleSpeedMonitor("avgSpeed", redisHost, redisPort));
-        }
-
         // forward average speed to redis
         avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
 
@@ -237,7 +233,12 @@ public class TridentProcessingTopology {
 
         // aggregate amount of taxis + overall distance and propagate to dashboard
 
-        distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashboardAddress));
+        distanceStream = distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashboardAddress));
+
+        if (BENCHMARK) {
+            distanceStream.filter(new TupleSpeedMonitor("final", redisHost, redisPort));
+        }
+
 
         return topology.build();
     }
