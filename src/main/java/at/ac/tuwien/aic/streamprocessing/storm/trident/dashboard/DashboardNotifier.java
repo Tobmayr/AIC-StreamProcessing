@@ -21,6 +21,10 @@ public abstract class DashboardNotifier extends BaseFilter {
     }
  
     protected void sendJSONPostRequest(Map<String, String> parameters) {
+        sendJSONPostRequest(parameters, dashboardURI);
+    }
+
+    protected void sendJSONPostRequest(Map<String, String> parameters, String dashboardURI) {
         try {
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpPost post = new HttpPost(dashboardURI);
