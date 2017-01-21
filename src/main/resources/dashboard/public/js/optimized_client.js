@@ -44,12 +44,24 @@ function initMap() {
     };
     map = new google.maps.Map(mapCanvas, mapOptions);
 
-    // taxi area
+    // taxi warning area begin
     var cityCircle = new google.maps.Circle({
-        strokeColor: '#FF0000',
+        strokeColor: '#FF00C1',
+	    strokeWeight: 2,
+	    fillOpacity: 0,
         map: map,
         center: forbiddenCity,
         radius: 10000
+    });
+
+    // taxi warning area end (prohibited area)
+    var cityCircle = new google.maps.Circle({
+        strokeColor: '#FF0000',
+        strokeWeight: 4,
+        fillOpacity: 0.2,
+        map: map,
+        center: forbiddenCity,
+        radius: 15000
     });
 
 };
