@@ -22,12 +22,13 @@ public class AreaLeavingNotifier extends DashboardNotifier {
         Double latitude = tuple.getDoubleByField("latitude");
         Double longitude = tuple.getDoubleByField("longitude");
         Double distance = Haversine.calculateDistanceBetween(centerLat, centerLong, latitude, longitude);
-        if (distance >= Constants.WARNING_DISTANCE) {
+        if (distance >= Constants.WARNING_DISTANCE && distance < Constants.BORDER_DISTANCE) {
             Map<String, String> map = new HashMap<>();
             map.put("taxiId", Integer.toString(taxiId));
             map.put("distance", Double.toString(distance));
             sendJSONPostRequest(map);
-
+        } else if (distance > Constants.BORDER_DISTANCE){
+            return false;
         }
         return true;
 
