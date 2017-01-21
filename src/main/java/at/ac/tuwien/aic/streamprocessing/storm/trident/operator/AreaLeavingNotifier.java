@@ -25,9 +25,11 @@ public class AreaLeavingNotifier extends BaseFilter {
         Double latitude = tuple.getDoubleByField("latitude");
         Double longitude = tuple.getDoubleByField("longitude");
         Double distance = Haversine.calculateDistanceBetween(centerLat, centerLong, latitude, longitude);
-        if (distance >= Config.WARNING_DISTANCE) {
+
+        if (distance >= Config.WARNING_DISTANCE && distance < Config.BORDER_DISTANCE) {
             String data = toJSON(taxiId, distance);
             HttpUtil.sendJSONPostRequest(dashboardAdress + Config.NOTIFY_AREA_VIOLATION_URI, data);
+        } else if (distance > Config.BORDER_DISTANCE){
             return false;
         }
         return true;
