@@ -2,6 +2,10 @@ package at.ac.tuwien.aic.streamprocessing.storm;
 
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
+import org.apache.storm.generated.AlreadyAliveException;
+import org.apache.storm.generated.AuthorizationException;
+import org.apache.storm.generated.InvalidTopologyException;
 import org.apache.storm.generated.StormTopology;
 import org.apache.storm.kafka.KeyValueSchemeAsMultiScheme;
 import org.apache.storm.kafka.ZkHosts;
@@ -154,9 +158,7 @@ public class TridentProcessingTopology {
     }
 
     public StormTopology build() {
-        if (localKafkaInstance == null) {
-            throw new IllegalStateException("Must start kafka before building topology");
-        }
+
 
         topology = new TridentTopology();
 
@@ -248,9 +250,24 @@ public class TridentProcessingTopology {
     }
 
     private OpaqueTridentKafkaSpout buildKafkaSpout() {
-        ZkHosts zkHosts = new ZkHosts(localKafkaInstance.getConnectString());
+        ZkHosts zkHosts;
+        if (localKafkaInstance == null) {
+            zkHosts = new ZkHosts("localhost");
+        } else {
+            zkHosts = new ZkHosts(localKafkaInstance.getConnectString());
+        }
         TridentKafkaConfig spoutConfig = new TridentKafkaConfig(zkHosts, topic);
         spoutConfig.scheme = new KeyValueSchemeAsMultiScheme(new TaxiEntryKeyValueScheme());
+        // spoutConfig.fetchSizeBytes = 1024*1024; // TODO optimize this value
+
+        /**
+         * src: http://stackoverflow.com/questions/27631277/batch-size-in-storm-trident
+         *
+         * batch size is related with number of brokers and number of partitions.
+         * For example, if you have 2 brokers and 3 partitions for each broker that means the total count of partition is 6.
+         * By this way, the batch size equals to tridentKafkaConfig.fetchSizeBytes X total partition count.
+         * if we assume that the tridentKafkaConfig.fetchSizeBytes is 1024X1024, the batch size equals to 6 MB.(3x2x1024x1024)bytes
+         */
 
         return new OpaqueTridentKafkaSpout(spoutConfig);
     }
@@ -264,7 +281,29 @@ public class TridentProcessingTopology {
         startRedis();
 
         cluster = new LocalCluster();
+
+        if (localKafkaInstance == null) {
+            throw new IllegalStateException("Must start kafka before building topology");
+        }
+
         cluster.submitTopology("stream-processing", conf, build());
+    }
+
+    public void submitCluster() {
+        Config conf = new Config();
+        conf.put("topology.eventlogger.executors",2); // TODO check if this has any effect
+        conf.setDebug(true); // TODO check if this has any effect
+        conf.setMaxTaskParallelism(2);
+
+        try {
+            StormSubmitter.submitTopology("taxicab-0_0_1",conf,build());
+        } catch (AlreadyAliveException e) {
+            e.printStackTrace();
+        } catch (InvalidTopologyException e) {
+            e.printStackTrace();
+        } catch (AuthorizationException e) {
+            e.printStackTrace();
+        }
     }
 
     public static TridentProcessingTopology createWithListeners(BaseFilter speedListener, BaseFilter avgSpeedListener, BaseFilter distanceListener)

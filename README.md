@@ -62,7 +62,7 @@ Open [WebInterface on localhost:8080](http://localhost:8080)
 Submitting the Topology to the cluster
 --------------------------------------
 ```
-./gradlew assemble
+./gradlew assemble;  ./gradlew stormJar
 ./bin/apache-storm-1.0.2/bin/storm jar build/libs/stream-processing-0.1-SNAPSHOT.jar at.ac.tuwien.aic.streamprocessing.storm.StreamProcessingTopology TestName
 
 # monitor a single component
@@ -89,7 +89,28 @@ rm -rf /tmp/kafka-logs
 
 Die `NoSuchElementException` kommt wenn man zuwenige `Values` aus einem `Operator` emitted als in der Topologie gefordert.
 
+```
+KeeperErrorCode = NoNode for /brokers/topics/test-topic/partitions
+./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic taxi
+ERROR org.apache.kafka.common.errors.InvalidReplicationFactorException: replication factor: 1 larger than available brokers: 0
 
+
+```
+
+``` testing
+ctrl+z
+
+systemctl start redis-server
+./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --alter --zookeeper localhost:2181  --partitions 5 --topic taxi
+
+ps aux | grep kafka
+ps aux | grep zookeeper
+ps aux | grep redis
+ps aux | grep SNAPSHOT 
+sudo systemctl stop redis-server
+
+./gradlew test
+```
 
 Testdata
 --------------------------
