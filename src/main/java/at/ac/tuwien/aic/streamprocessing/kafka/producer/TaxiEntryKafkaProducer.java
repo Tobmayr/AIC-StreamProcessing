@@ -43,7 +43,7 @@ public class TaxiEntryKafkaProducer {
      */
     public void produce(TaxiEntryProvider provider) {
         provider.getEntries().forEach(entry -> {
-            logger.debug("Produce " + entry.toString());
+            // logger.debug("Produce " + entry.toString());
             ProducerRecord<Integer, TaxiEntry> record = new ProducerRecord<>(topic, entry.getTaxiId(), entry);
             producer.send(record);
         });
