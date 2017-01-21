@@ -46,7 +46,9 @@ function initMap() {
 
     // taxi warning area begin
     var cityCircle = new google.maps.Circle({
-        strokeColor: '#FF0000',
+        strokeColor: '#FF00C1',
+        strokeWeight: 2,
+        fillOpacity: 0,
         map: map,
         center: forbiddenCity,
         radius: 10000
@@ -55,7 +57,9 @@ function initMap() {
     // taxi warning area end
     var cityCircle = new google.maps.Circle({
         strokeColor: '#FF0000',
+        strokeWeight: 4,
         map: map,
+        fillOpacity: 0.2,
         center: forbiddenCity,
         radius: 15000
     });
