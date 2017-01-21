@@ -47,8 +47,8 @@ function initMap() {
     // taxi warning area begin
     var cityCircle = new google.maps.Circle({
         strokeColor: '#FF00C1',
-	    strokeWeight: 2,
-	    fillOpacity: 0,
+        strokeWeight: 2,
+        fillOpacity: 0,
         map: map,
         center: forbiddenCity,
         radius: 10000
@@ -98,11 +98,11 @@ function reloadIncidentList() {
 function removeTaxi(taxiId) {
     if (markers[taxiId] != undefined) {
         markers[taxiId].setMap(null);
-        //Remove all taxi references
-        delete markers[taxiId];
-        delete violations[taxiId];
-        delete incidents[taxiId];
-    }
+    } //Remove all taxi references
+    delete markers[taxiId];
+    delete violations[taxiId];
+    delete incidents[taxiId];
+
 
 };
 
