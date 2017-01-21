@@ -1,17 +1,19 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var path = require('path');
 var app = express();
-app.use(express.static(__dirname + '/public'));
+app.use('/', express.static(__dirname + '/public'));
+app.set('views', path.join(__dirname, '/public'));
 app.use('/bower_components',  express.static(__dirname + '/bower_components'));
+app.use('/js',  express.static(__dirname + '/public/js'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
-
-app.get('/', function (req, res) {
-   res.render('index.html');
+app.get('/2', function (req, res) {
+   res.render('optimization.html');
 });
 
 // add new taxis or update an existing ones

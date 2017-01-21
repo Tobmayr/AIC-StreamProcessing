@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Taxi Fleet Monitoring Dashboard</title>
+</head>
+<body>
+
+<h3>Taxi Fleet Monitoring Dashboard (optimized)</h3>
+
+<div id="map" style="width:100%;height:350px"></div>
+
+<div style="height:100%; width:100%; overflow: hidden;">
+    <div style="float: left; width:30%;">
+        <div><b>Currently driving taxis</b></div>
+        <div id="currentlyDrivingTaxis">0</div>
+        <div><b>Overall distance of all taxis</b></div>
+        <div id="overallDistance">0 km</div>
+    </div>
+    <div style="float: left; width:30%;">
+        <div><b>Area violations</b></div>
+        <ul id="areaViolations"></ul>
+    </div>
+    <div style="float: left; width:40%;">
+        <div><b>Speeding incidents</b></div>
+        <ul id="speedingIncidents"></ul>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../js/optimized_client.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?callback=initMap"></script>
+
+</body>
+</html>
