@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.storm.trident.tuple.TridentTuple;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.information.InformationState;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Constants;
 
 public class PropagateInformation extends DashboardNotifier {
