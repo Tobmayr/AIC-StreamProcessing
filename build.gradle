@@ -111,6 +111,11 @@ task runTopology(type: JavaExec) {
     main = "at.ac.tuwien.aic.streamprocessing.storm.TridentProcessingTopology"
 }
 
+task runOptimizedTopology(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.storm.OptimizedTridentProcessingTopology"
+}
+
 
 task stormJar(type: Jar) {
     dependsOn configurations.runtime
