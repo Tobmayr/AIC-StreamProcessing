@@ -24,21 +24,17 @@ public class OptimizedAreaLeavingNotifier extends DashboardNotifier {
         Double longitude = tuple.getDoubleByField("longitude");
         Double distance = Haversine.calculateDistanceBetween(centerLat, centerLong, latitude, longitude);
 
-        // the taxi is more than 15 km away from the forbidden city, the dashboard should discard this taxi
-        if (distance >= Constants.PROHIBITED_DISTANCE) {
-            Map<String, String> map = new HashMap<>();
-            map.put("taxiId", Integer.toString(taxiId));
-            map.put("discard", "true");
-            sendJSONPostRequest(map);
-            return false;
-        }
-
         // the taxi is more than 10 km away from the forbidden city, warn the dashboard
         if (distance >= Constants.WARNING_DISTANCE) {
             Map<String, String> map = new HashMap<>();
             map.put("taxiId", Integer.toString(taxiId));
             map.put("distance", Double.toString(distance));
             sendJSONPostRequest(map);
+        }
+
+        // the taxi is more than 15 km away from the forbidden city, discard this tupel
+        if (distance >= Constants.PROHIBITED_DISTANCE) {
+            return false;
         }
 
         return true;

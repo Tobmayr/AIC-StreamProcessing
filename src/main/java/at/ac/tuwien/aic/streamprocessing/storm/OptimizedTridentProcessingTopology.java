@@ -164,7 +164,7 @@ public class OptimizedTridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5)
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS)
                 .filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // notify dashboard of occurring area violations
