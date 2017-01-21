@@ -33,12 +33,6 @@ public class TaxiEntryKeyValueScheme implements KeyValueScheme {
             return null;
         }
 
-        logger.debug("Emitting ({}, {}, {}, {})",
-                entry.getTaxiId(),
-                Timestamp.toString(entry.getTimestamp()),
-                entry.getLatitude(),
-                entry.getLongitude());
-
         return new Values(
                 entry.getTaxiId(),
                 Timestamp.toString(entry.getTimestamp()),
