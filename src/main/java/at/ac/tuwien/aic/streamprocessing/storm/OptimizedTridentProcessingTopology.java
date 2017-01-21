@@ -1,6 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifierAndLocationPropagator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -12,9 +12,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
-import org.apache.storm.trident.testing.MemoryMapState;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +21,8 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateTaxiCountAndDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.SpeedingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.StoreInformation;
@@ -168,7 +163,7 @@ public class OptimizedTridentProcessingTopology {
                 .filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // notify dashboard of occurring area violations
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifier(dashbaordAdress));
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifierAndLocationPropagator(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));

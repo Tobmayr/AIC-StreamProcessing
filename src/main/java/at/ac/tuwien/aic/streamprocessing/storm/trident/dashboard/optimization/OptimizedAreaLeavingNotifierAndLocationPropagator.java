@@ -10,12 +10,12 @@ import org.apache.storm.trident.tuple.TridentTuple;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Constants;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 
-public class OptimizedAreaLeavingNotifier extends DashboardNotifier {
+public class OptimizedAreaLeavingNotifierAndLocationPropagator extends DashboardNotifier {
 
     private Map<Integer, Long> idTimeMap = Collections.synchronizedMap(new HashMap<Integer, Long>());
     private String dashboardAddress;
 
-    public OptimizedAreaLeavingNotifier(String dashboardAddress) {
+    public OptimizedAreaLeavingNotifierAndLocationPropagator(String dashboardAddress) {
         super(dashboardAddress + Constants.NOTIFY_AREA_VIOLATION_URI);
         this.dashboardAddress = dashboardAddress;
     }
