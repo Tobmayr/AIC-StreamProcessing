@@ -23,7 +23,7 @@ public class DrivingTaxiFilter extends DashboardNotifier {
         Double latitude = tuple.getDoubleByField("latitude");
         Double longitude = tuple.getDoubleByField("longitude");
 
-        if (latitude == Constants.STOP_TOKEN_VALUE && longitude == Constants.STOP_TOKEN_VALUE) {
+        if (Double.compare(latitude, Constants.STOP_TOKEN_VALUE) == 0 && Double.compare(longitude, Constants.STOP_TOKEN_VALUE) == 0) {
             logger.debug(String.format("Taxi with id \"%s\" has emmited a stop token", taxiId));
             Map<String, String> map = new HashMap<>();
             map.put("taxiId", Integer.toString(taxiId));
@@ -31,6 +31,7 @@ public class DrivingTaxiFilter extends DashboardNotifier {
 
             return false;
         }
+
         return true;
     }
 
