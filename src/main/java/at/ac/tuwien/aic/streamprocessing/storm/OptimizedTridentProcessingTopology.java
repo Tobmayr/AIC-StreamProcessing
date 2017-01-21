@@ -189,10 +189,6 @@ public class OptimizedTridentProcessingTopology {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
 
-        if (BENCHMARK) {
-            speedStream.filter(new TupleSpeedMonitor("speed", redisHost, redisPort));
-        }
-
         // notify dashboard if vehicle is speeding
         speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
 
@@ -208,6 +204,10 @@ public class OptimizedTridentProcessingTopology {
 
         if (avgSpeedTupleListener != null) {
             avgSpeedStream = avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, avgSpeedTupleListener);
+        }
+
+        if (BENCHMARK) {
+            avgSpeedStream.filter(new TupleSpeedMonitor("avgSpeed", redisHost, redisPort));
         }
 
         // forward average speed to redis
