@@ -1,5 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.performance.TupleSpeedMonitor;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -11,9 +12,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
-import org.apache.storm.trident.testing.MemoryMapState;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,6 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateTaxiCountAndDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
@@ -46,6 +44,8 @@ import redis.embedded.RedisServer;
 public class TridentProcessingTopology {
     private final Logger logger = LoggerFactory.getLogger(TridentProcessingTopology.class);
 
+    private boolean BENCHMARK = true;
+
     private static final String SPOUT_ID = "kafka-spout";
 
     private String topic;
@@ -53,7 +53,7 @@ public class TridentProcessingTopology {
     private final String redisHost;
     private final int redisPort;
 
-    private final String dashbaordAdress;
+    private final String dashboardAddress;
 
     private final BaseFilter speedTupleListener;
     private final BaseFilter avgSpeedTupleListener;
@@ -70,7 +70,7 @@ public class TridentProcessingTopology {
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
-        this.dashbaordAdress = dashboardAdress;
+        this.dashboardAddress = dashboardAdress;
 
         this.speedTupleListener = null;
         this.avgSpeedTupleListener = null;
@@ -79,7 +79,7 @@ public class TridentProcessingTopology {
 
     public TridentProcessingTopology(String topic, String redisHost, int redisPort, String dashboardAdress, BaseFilter speedTupleListener,
             BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
-        this.dashbaordAdress = dashboardAdress;
+        this.dashboardAddress = dashboardAdress;
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
@@ -163,14 +163,21 @@ public class TridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5)
-                .filter(new DrivingTaxiFilter(dashbaordAdress));
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5);
+
+        if (BENCHMARK) {
+            inputStream = inputStream.filter(new TupleSpeedMonitor("spout", redisHost, redisPort));
+        }
+
+        inputStream = inputStream
+                .filter(new DrivingTaxiFilter(dashboardAddress));
 
         // propagate location information
-        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
+        inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashboardAddress));
 
         // notify dashboard of occurring area violations
-        inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
+        inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashboardAddress));
+
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
@@ -186,8 +193,12 @@ public class TridentProcessingTopology {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
         }
 
+        if (BENCHMARK) {
+            speedStream.filter(new TupleSpeedMonitor("speed", redisHost, redisPort));
+        }
+
         // notify dashboard if vehicle is speeding
-        speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashbaordAdress));
+        speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, new SpeedingNotifier(dashboardAddress));
 
         // setup average speed aggregator
         TridentState avgSpeed = topology.newStaticState(StateFactory.createAverageSpeedStateFactory(redisHost, redisPort));
@@ -226,7 +237,7 @@ public class TridentProcessingTopology {
 
         // aggregate amount of taxis + overall distance and propagate to dashboard
 
-        distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashbaordAdress));
+        distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashboardAddress));
 
         return topology.build();
     }

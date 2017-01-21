@@ -1,6 +1,7 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifier;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.performance.TupleSpeedMonitor;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -12,9 +13,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
-import org.apache.storm.trident.testing.MemoryMapState;
 import org.apache.storm.trident.tuple.TridentTuple;
-import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +22,6 @@ import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateSpeed;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateTaxiCountAndDistance;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.AreaLeavingNotifier;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateLocation;
@@ -46,6 +43,8 @@ import redis.embedded.RedisServer;
 
 public class OptimizedTridentProcessingTopology {
     private final Logger logger = LoggerFactory.getLogger(OptimizedTridentProcessingTopology.class);
+
+    private boolean BENCHMARK = true;
 
     private static final String SPOUT_ID = "kafka-spout";
 
@@ -164,7 +163,13 @@ public class OptimizedTridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5)
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5);
+
+        if (BENCHMARK) {
+            inputStream = inputStream.filter(new TupleSpeedMonitor("spout", redisHost, redisPort));
+        }
+
+        inputStream = inputStream
                 .filter(new DrivingTaxiFilter(dashbaordAdress));
 
         // notify dashboard of occurring area violations
@@ -185,6 +190,10 @@ public class OptimizedTridentProcessingTopology {
 
         if (speedTupleListener != null) {
             speedStream = speedStream.each(TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS, speedTupleListener);
+        }
+
+        if (BENCHMARK) {
+            speedStream.filter(new TupleSpeedMonitor("speed", redisHost, redisPort));
         }
 
         // notify dashboard if vehicle is speeding
