@@ -1,5 +1,6 @@
 package at.ac.tuwien.aic.streamprocessing.storm;
 
+import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization.OptimizedAreaLeavingNotifier;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.StormTopology;
@@ -166,11 +167,11 @@ public class OptimizedTridentProcessingTopology {
         Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5)
                 .filter(new DrivingTaxiFilter(dashbaordAdress));
 
+        // notify dashboard of occurring area violations
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifier(dashbaordAdress));
+
         // propagate location information
         inputStream.each(TaxiFields.BASE_FIELDS, new PropagateLocation(dashbaordAdress));
-
-        // notify dashboard of occurring area violations
-        inputStream.each(TaxiFields.BASE_FIELDS, new AreaLeavingNotifier(dashbaordAdress));
 
         // setup speed aggregator
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
