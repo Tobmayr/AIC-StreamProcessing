@@ -193,9 +193,6 @@ public class OptimizedTridentProcessingTopology {
             avgSpeedStream = avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, avgSpeedTupleListener);
         }
 
-        // forward average speed to redis
-        avgSpeedStream.each(TaxiFields.AVG_SPEED_OUTPUT_FIELDS, new StoreInformation(InfoType.AVERAGE_SPEED, redisHost, redisPort));
-
         // setup distance aggregator
         TridentState distance = topology.newStaticState(StateFactory.createDistanceStateFactory(redisHost, redisPort));
         Stream distanceStream = inputStream.stateQuery( // query the state for each taxi id
@@ -210,12 +207,7 @@ public class OptimizedTridentProcessingTopology {
             distanceStream = distanceStream.toStream().each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS, distanceTupleListener);
         }
 
-        // forward distance to redis
-        distanceStream.each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS,
-                new StoreInformation(InfoType.DISTANCE, redisHost, redisPort));
-
         // aggregate amount of taxis + overall distance and propagate to dashboard
-
         distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashbaordAdress));
 
         return topology.build();
