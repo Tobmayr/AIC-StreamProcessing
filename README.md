@@ -94,11 +94,11 @@ Die `NoSuchElementException` kommt wenn man zuwenige `Values` aus einem `Operato
 Testdata
 --------------------------
 
-The testdata (merged, sorted) can be downloaded through [this link](https://onedrive.live.com/download?cid=B692A0DA79689448&resid=B692A0DA79689448%211976&authkey=ADhMxFK3JFPf0Jw) OR [this link] (https://drive.google.com/uc?export=download&confirm=ha6G&id=0B5_xoVJ9kw95QkNESFM0OHM2RlE)
+The testdata (merged, sorted, with endToken) can be downloaded through [this link](https://www.dropbox.com/sh/rv7uambq691s44l/AADBRd0ARfXm-9ZSshB_FjP5a?dl=0) 
 
 
 
-The workflow how the original test-data has been merged and sorted
+The workflow how the original test-data has been merged,sorted and how the end token has been added
 ```
 # 0. Install sqlite3
 sudo apt install sqlite3
@@ -107,12 +107,13 @@ sudo apt install sqlite3
 copy /b *.txt testData_merged_unsorted.csv
 
 # 2. Import test-data into sqlite 
-sqlite3 taxiData < script.sqlite
+sqlite3 TaxiData < script.sqlite
 
 #where script.sqlite contains:
 create table taxiData(id integer, timestamp datetime, lat decimal, long decimal);
 .mode csv
-.import 'testData_merged_unsorted.csv' TaxiData.db
+.import 'taxi_sub_data.csv' TaxiData
+INSERT INTO taxiData SELECT id, datetime(max(timestamp),'+1 second') AS timestamp, 360 AS long, 360 AS lat FROM  taxiData GROUP BY id;
 
 # 3. Output query to file
 sqlite3.exe -csv taxiData "SELECT * FROM taxiData ORDER BY 2" > testData_merged_sorted.csv
