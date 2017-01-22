@@ -10,7 +10,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 
 public class LocalKafkaInstanceTest extends AbstractLocalKafkaInstanceTest {
@@ -31,6 +35,7 @@ public class LocalKafkaInstanceTest extends AbstractLocalKafkaInstanceTest {
 
         // consume them
         KafkaConsumer<String, String> consumer = null;
+        Set<Integer> seen = new HashSet<>();
         try {
             consumer = new KafkaConsumer<>(KafkaTestConfiguration.createConsumerProperties());
             consumer.subscribe(Collections.singletonList(TOPIC));
@@ -40,10 +45,12 @@ public class LocalKafkaInstanceTest extends AbstractLocalKafkaInstanceTest {
                 ConsumerRecords<String, String> records = consumer.poll(100);
 
                 for (ConsumerRecord<String, String> record : records) {
-                    assertEquals(i.toString(), record.key());
+                    seen.add(Integer.parseInt(record.key()));
                     i = i + 1;
                 }
             }
+
+            assertThat(seen.size(), equalTo(100));
         } finally {
             if (consumer != null) {
                 consumer.close();

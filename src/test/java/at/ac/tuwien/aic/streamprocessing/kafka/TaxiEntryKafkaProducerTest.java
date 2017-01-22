@@ -50,9 +50,11 @@ public class TaxiEntryKafkaProducerTest extends AbstractLocalKafkaInstanceTest {
             consumer.subscribe(Collections.singletonList(TOPIC));
 
             List<ConsumerRecord<Integer, byte[]>> consumed = consume(consumer, expected.size());
-            List<TaxiEntry> actual = consumed.stream().map(r -> TaxiEntryDeserializer.deserialize(r.value())).collect(Collectors.toList());
+            List<TaxiEntry> actual = consumed.stream().map(r -> TaxiEntryDeserializer.deserialize(r.value()))
+                    .sorted(Comparator.comparing(TaxiEntry::getTimestamp))
+                    .collect(Collectors.toList());
 
-            assertThat(expected, is(actual));
+            assertThat(actual, is(expected));
         } finally {
             if (consumer != null) {
                 consumer.close();
