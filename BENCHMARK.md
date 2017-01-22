@@ -30,6 +30,11 @@ Furthermore, in order to isolate the performance from the dashboard we disabled
 communication between topology and the dashboard for the duration of the
 benchmark.
 
+Hardware
+--------
+
+We performed the benchmarks on a Intel i7-3517U clocked at 1.90GHz with 4GB
+RAM.
 
 Results
 -------
