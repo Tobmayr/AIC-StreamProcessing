@@ -27,6 +27,8 @@ public class LocalKafkaInstance {
     private final static Logger logger = LoggerFactory.getLogger(LocalKafkaInstance.class);
     private final static String TMP_LOG_PREFIX = "aic-stream";
 
+    private final static int PARTITIONS = 3;
+
     private final int kafka_port;
     private final int zookeeper_port;
 
@@ -108,9 +110,8 @@ public class LocalKafkaInstance {
         ZkClient zkClient = new ZkClient(zookeeper_uri, 5000, 5000, ZKStringSerializer$.MODULE$);
         ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeper_uri), false);
 
-        int partitions = 1;
         int replications = 1;
-        AdminUtils.createTopic(zkUtils, topicName, partitions, replications, AdminUtils.createTopic$default$5(), AdminUtils.createTopic$default$6());
+        AdminUtils.createTopic(zkUtils, topicName, PARTITIONS, replications, AdminUtils.createTopic$default$5(), AdminUtils.createTopic$default$6());
 
         zkUtils.close();
 

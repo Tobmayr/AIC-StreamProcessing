@@ -224,9 +224,10 @@ public class OptimizedTridentProcessingTopology {
         if (BENCHMARK) {
             avgSpeedStream.filter(new TupleSpeedMonitor("final", redisHost, redisPort));
         }
-        // avgSpeedStream.parallelismHint(5);
-        // inputStream.parallelismHint(5);
-        // speedStream.parallelismHint(5);
+
+        avgSpeedStream.parallelismHint(3);
+        inputStream.parallelismHint(3);
+        speedStream.parallelismHint(3);
 
         return topology.build();
     }
