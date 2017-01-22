@@ -5,8 +5,8 @@
 Toolchain
 ---------
 
-* Language: Java
-* Buildtool: Gradle >= 3.1
+* Language: **Java**
+* Buildtool: **Gradle >= 3.1**
 
 plugins
 
@@ -15,7 +15,7 @@ plugins
 
 # Testing in the provided VM
 
-After starting the VM and logging in with the username ubuntu and password ubuntu there will be some scripts located under ~/Desktop to manage the topology.
+After starting the VM and logging in with the username **ubuntu** and password **ubuntu** there will be some scripts located under *~/Desktop* to manage the topology.
 
 Starting the topology
 ---------------------
@@ -40,4 +40,14 @@ cd ~/Desktop
 Testdata
 --------
 
-We provide a single file containing the test data (merged, sorted, with end tokens) which can be found under ~/testdata.
+We provide two sets of testdata files. One containing the full original testdata (merged, sorted, with end tokens) named  *taxi_data.csv* . 
+The other file  *taxi_sub_data.csv*  contains a subset of only 20 taxis,  choosen from the original set of test data.  The subset file is more 
+appropriate for demonstration purposes. 
+
+Both of those files can be found under *~/testdata.*
+
+
+
+Further Information
+---------
+For more detailed instructions and solutions for potential issues, take a look in our [DEV-README](http://hyde.infosys.tuwien.ac.at/aic2016/G2T1v2/blob/master/DEV-README.md) .  
