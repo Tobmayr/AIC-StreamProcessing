@@ -46,7 +46,7 @@ import redis.embedded.RedisServer;
 public class TridentProcessingTopology {
 	private final Logger logger = LoggerFactory.getLogger(TridentProcessingTopology.class);
 
-	private boolean BENCHMARK = true;
+	private static boolean BENCHMARK = false;
 
 	private static final String SPOUT_ID = "kafka-spout";
 
@@ -328,6 +328,7 @@ public class TridentProcessingTopology {
 				return true;
 			}
 		};
+		BENCHMARK = (args.length >= 1 && args[0].equals("benchmark"));
 		TridentProcessingTopology topology = null;
 		try {
 			topology = createWithListeners(speedListener, avgSpeedListener, distanceListener);
