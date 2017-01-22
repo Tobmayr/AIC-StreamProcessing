@@ -20,17 +20,12 @@ socket.on('location', function (data) {
             violations[data.taxiId] = data.distance;
         }
     }
-
-
 });
-
 
 socket.on('stats', function (data) {
     taxiCount=data.taxiCount;
     overallDistance=parseFloat(data.distance).toFixed(2);
 });
-
-
 
 socket.on('stop', function (data) {
     removeTaxi(data.taxiId);
@@ -54,7 +49,7 @@ function initMap() {
     var cityCircle = new google.maps.Circle({
         strokeColor: '#FF00C1',
         strokeWeight: 2,
-        fillOpacity: 0,
+        fillOpacity: 0.05,
         map: map,
         center: forbiddenCity,
         radius: 10000
@@ -64,7 +59,7 @@ function initMap() {
     var cityCircle = new google.maps.Circle({
         strokeColor: '#FF0000',
         strokeWeight: 4,
-        fillOpacity: 0.2,
+        fillOpacity: 0.0,
         map: map,
         center: forbiddenCity,
         radius: 15000
@@ -79,7 +74,7 @@ function createOrMoveMarker(map, taxiId, lat, lng) {
     }
     var icon = {
         url: "img/car.png",
-        scaledSize: new google.maps.Size(20, 20), // scaled size
+        scaledSize: new google.maps.Size(40, 40), // scaled size
         origin: new google.maps.Point(0, 0),
         anchor: new google.maps.Point(0, 0)
     }
@@ -90,18 +85,19 @@ function createOrMoveMarker(map, taxiId, lat, lng) {
 
 function reloadUIElements(){
     $("#currentlyDrivingTaxis").text(taxiCount);
-    $("#overallDistance").text(overallDistance + ' km');
+    $("#overallDistance").text(overallDistance);
 
     $("#areaViolations").empty();
     for (var taxiId in violations) {
         var distance = parseFloat(violations[taxiId]).toFixed(2);
-        $("#areaViolations").append('<li>Taxi ' + taxiId + ' (' + distance + ' km)' + '</li>');
+        $("#areaViolations").append("<tr><td>" + taxiId + "</td><td>" + distance + "</td></tr>");
     }
 
     $("#speedingIncidents").empty();
     for (var taxiId in incidents) {
-        var speed = parseFloat(incidents[taxiId]).toFixed(2)
-        $("#speedingIncidents").append('<li>Taxi ' + taxiId + ' (' + speed + ' km/h)' + '</li>');
+        var speed = parseFloat(incidents[taxiId]).toFixed(2);
+        var over = parseFloat(speed - 50.0).toFixed(2);
+        $("#speedingIncidents").append("<tr><td>" + taxiId + "</td><td>" + speed + "</td><td class='speeding'>+" + over + "</td></tr>");
     }
 }
 function removeTaxi(taxiId) {
@@ -111,7 +107,5 @@ function removeTaxi(taxiId) {
     delete markers[taxiId];
     delete violations[taxiId];
     delete incidents[taxiId];
-
-
 };
 
