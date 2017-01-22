@@ -49,6 +49,7 @@ public class RedisMonitor extends Application {
                     .map(this::queryTaxi)
                     .collect(Collectors.toList());
             if(!taxis.isEmpty()) {
+            	printOverallDistance(taxis);
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {
@@ -67,7 +68,16 @@ public class RedisMonitor extends Application {
         }
     }
 
-    private List<Integer> getTaxiIds() {
+    private void printOverallDistance(List<TaxiData> taxis) {
+		Double distance=0D;
+		for (TaxiData data:taxis){
+			distance+= Double.valueOf(data.distance.getValue());
+		}
+		System.out.println("Aggregated distance: "+distance);
+		
+	}
+
+	private List<Integer> getTaxiIds() {
         Set<Integer> ids = new HashSet<>();
 
         for (String key : jedis.keys("*")) {
