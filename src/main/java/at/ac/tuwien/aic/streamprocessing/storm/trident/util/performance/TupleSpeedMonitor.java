@@ -1,69 +1,79 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.util.performance;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.storm.trident.operation.Filter;
 import org.apache.storm.trident.operation.TridentOperationContext;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import redis.clients.jedis.Jedis;
 
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
 public class TupleSpeedMonitor implements Filter {
-    private static final long UPDATE_INTERVAL = 100;
-    private static final Logger logger = LoggerFactory.getLogger(TupleSpeedMonitor.class);
+	private static final long UPDATE_INTERVAL = 100;
+	private static final Logger logger = LoggerFactory.getLogger(TupleSpeedMonitor.class);
 
+	private static Map<String, MonitorData> dataMap = new HashMap<>();
+	private String prefix;
+	private String redisHost;
+	private int redisPort;
+	private int partitionIndex;
 
-    private String prefix;
-    private String redisHost;
-    private int redisPort;
+	public TupleSpeedMonitor(String prefix, String redisHost, int redisPort) {
+		dataMap.put(prefix, new MonitorData());
+		this.prefix = prefix;
+		this.redisHost = redisHost;
+		this.redisPort = redisPort;
+	}
 
-    private Long firstTupleEncountered = null;
-    private AtomicLong tuples = new AtomicLong();
+	@Override
+	public boolean isKeep(TridentTuple tuple) {
+		MonitorData data = dataMap.get(prefix);
+		if (data.firstTupleEncountered == null) {
+			data.firstTupleEncountered = System.currentTimeMillis();
+		}
 
-    public TupleSpeedMonitor(String prefix, String redisHost, int redisPort) {
-        this.prefix = prefix;
-        this.redisHost = redisHost;
-        this.redisPort = redisPort;
-    }
+		long current = data.tuples.incrementAndGet();
 
-    @Override
-    public boolean isKeep(TridentTuple tuple) {
-        if (firstTupleEncountered == null) {
-            firstTupleEncountered = System.currentTimeMillis();
-        }
+		if (current % UPDATE_INTERVAL == 0) {
+			store(current, data);
+		}
 
-        long current = tuples.incrementAndGet();
+		return true;
+	}
 
-        if (current % UPDATE_INTERVAL == 0) {
-            store(current);
-        }
+	private void store(Long counter, MonitorData data) {
+		long now = System.currentTimeMillis();
 
-        return true;
-    }
+		Double tuplesPerSecond = counter / ((now - data.firstTupleEncountered) / 1000.0);
+		String s = String.format("%.2f", tuplesPerSecond);
 
-    private void store(Long counter) {
-        long now = System.currentTimeMillis();
+		Jedis jedis = new Jedis(redisHost, redisPort);
+		jedis.set(prefix + "_total_tuples", counter.toString());
+		jedis.set(prefix + "_tuples_per_second", s);
+		jedis.close();
 
-        Double tuplesPerSecond = counter / ((now - firstTupleEncountered) / 1000.0);
-        String s = String.format("%.2f", tuplesPerSecond);
+		logger.info(String.format("[P:%s]%s:%s tuples (%s tuples/s)", partitionIndex, prefix, counter, s));
 
-        Jedis jedis = new Jedis(redisHost, redisPort);
-        jedis.set(prefix + "_total_tuples", counter.toString());
-        jedis.set(prefix + "_tuples_per_second", s);
-        jedis.close();
+	}
 
-        logger.info(prefix + ":" + counter + " tuples (" + s + " tuples/s)");
-    }
+	@Override
+	public void prepare(Map conf, TridentOperationContext context) {
+		partitionIndex = context.getPartitionIndex();
+	}
 
-    @Override
-    public void prepare(Map conf, TridentOperationContext context) {
+	@Override
+	public void cleanup() {
 
-    }
+	}
 
-    @Override
-    public void cleanup() {
+	private class MonitorData {
 
-    }
+		public Long firstTupleEncountered = null;
+		public AtomicLong tuples = new AtomicLong();
+
+	}
 }

@@ -162,7 +162,7 @@ public class OptimizedTridentProcessingTopology {
         OpaqueTridentKafkaSpout spout = buildKafkaSpout();
 
         // setup topology
-        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS).parallelismHint(5);
+        Stream inputStream = topology.newStream(SPOUT_ID, spout).partitionBy(TaxiFields.ID_ONLY_FIELDS);
 
         if (BENCHMARK) {
             inputStream = inputStream.filter(new TupleSpeedMonitor("spout", redisHost, redisPort));
@@ -224,6 +224,7 @@ public class OptimizedTridentProcessingTopology {
             distanceStream.filter(new TupleSpeedMonitor("final", redisHost, redisPort));
         }
 
+        distanceStream.parallelismHint(5);
         return topology.build();
     }
 
