@@ -27,198 +27,218 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RedisMonitor extends Application {
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
+	private static boolean isMonitorForOptimizedTopology = false;
+	private static final String REDIS_HOST = "localhost";
+	private static final int REDIS_PORT = 6379;
+	private static final int INTERVAL = 2000;
 
-    private static final String REDIS_HOST = "localhost";
-    private static final int REDIS_PORT = 6379;
-    private static final int INTERVAL = 2000;
+	private final Jedis jedis;
 
-    private final Jedis jedis;
+	static {
+		DECIMAL_FORMAT.setRoundingMode(RoundingMode.CEILING);
+	}
 
-    static {
-        DECIMAL_FORMAT.setRoundingMode(RoundingMode.CEILING);
-    }
+	public RedisMonitor() {
+		jedis = new Jedis(REDIS_HOST, REDIS_PORT);
+	}
 
-    public RedisMonitor() {
-        jedis = new Jedis(REDIS_HOST, REDIS_PORT);
-    }
+	void run(TableView tableView) {
+		while (true) {
+			List<TaxiData> taxis = getTaxiIds().stream().map(this::queryTaxi).collect(Collectors.toList());
+			if (!taxis.isEmpty()) {
+				printOverallDistance(taxis);
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						tableView.setItems(FXCollections.observableArrayList(taxis));
+						// printData(taxis);
+					}
+				});
 
-    void run(TableView tableView) {
-        while (true) {
-            List<TaxiData> taxis = getTaxiIds().stream()
-                    .map(this::queryTaxi)
-                    .collect(Collectors.toList());
-            if(!taxis.isEmpty()) {
-            	printOverallDistance(taxis);
-                Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        tableView.setItems(FXCollections.observableArrayList(taxis));
-                        // printData(taxis);
-                    }
-                });
+			}
 
-            }
+			try {
+				Thread.sleep(INTERVAL);
+			} catch (InterruptedException e) {
 
-            try {
-                Thread.sleep(INTERVAL);
-            } catch (InterruptedException e) {
-
-            }
-        }
-    }
-
-    private void printOverallDistance(List<TaxiData> taxis) {
-		Double distance=0D;
-		for (TaxiData data:taxis){
-			distance+= Double.valueOf(data.distance.getValue());
+			}
 		}
-		System.out.println("Aggregated distance: "+distance);
-		
+	}
+
+	private void printOverallDistance(List<TaxiData> taxis) {
+		Double distance = 0D;
+		for (TaxiData data : taxis) {
+			distance += Double.valueOf(data.distance.getValue());
+		}
+		System.out.println("Aggregated distance: " + distance);
+
 	}
 
 	private List<Integer> getTaxiIds() {
-        Set<Integer> ids = new HashSet<>();
+		Set<Integer> ids = new HashSet<>();
 
-        for (String key : jedis.keys("*")) {
-            if (!key.endsWith(InfoType.DISTANCE.getKeyPrefix()) && !key.endsWith(InfoType.AVERAGE_SPEED.getKeyPrefix())) {
-                continue;
-            }
+		for (String key : jedis.keys("*")) {
+			Integer id = null;
+			if (isKeyForOptimizedTopology(key)) {
+				id = Integer.parseInt(key.split(":")[2]);
+			} else if (isKeyForDefaultTopology(key)) {
+				id = Integer.parseInt(key.split("_")[0]);
+				
+			}
 
-            Integer id = Integer.parseInt(key.split("_")[0]);
-            ids.add(id);
-        }
+			if (id != null) {
+				ids.add(id);
+			}
 
-        List<Integer> sortedIds = new ArrayList<>(ids);
-        Collections.sort(sortedIds);
+		}
 
-        return sortedIds;
-    }
+		List<Integer> sortedIds = new ArrayList<>(ids);
+		Collections.sort(sortedIds);
 
-    private TaxiData queryTaxi(Integer id) {
-        String distance = jedis.get(id.toString() + InfoType.DISTANCE.getKeyPrefix());
-        String averageSpeed = jedis.get(id.toString() + InfoType.AVERAGE_SPEED.getKeyPrefix());
+		return sortedIds;
+	}
 
-        return new TaxiData(
-                id.toString(),
-                round(distance),
-                round(averageSpeed)
-        );
-    }
+	private boolean isKeyForOptimizedTopology(String key) {
+		return isMonitorForOptimizedTopology
+				&& (key.startsWith("tridentState:distance:") || key.startsWith("tridentState:avgSpeed:"));
 
-    private void printData(List<TaxiData> taxis) {
-        System.out.println("\033[H\033[2J");
-        System.out.flush();
-        System.out.println("Taxi ID\t\tDistance (km)\tAverage Speed (km/h)");
-        System.out.println("----------------------------------------------------");
-        for (TaxiData taxi : taxis) {
-            System.out.println(taxi.id.getValue() + "\t\t" + taxi.distance.getValue() + "\t\t" + taxi.averageSpeed.getValue());
-        }
-    }
+	}
 
-    private String round(String value) {
-        if (value == null) {
-            return "N/A";
-        }
+	private boolean isKeyForDefaultTopology(String key) {
+		return !isMonitorForOptimizedTopology && (key.endsWith(InfoType.DISTANCE.getKeyPrefix())
+				|| key.endsWith(InfoType.AVERAGE_SPEED.getKeyPrefix()));
+	}
 
-        Double val = Double.parseDouble(value);
-        return DECIMAL_FORMAT.format(val);
-    }
+	private TaxiData queryTaxi(Integer id) {
+		String distance, averageSpeed;
+		if (isMonitorForOptimizedTopology) {
+			distance = jedis.get("tridentState:distance:" + id);
+			averageSpeed = jedis.get("tridentState:avgSpeed:" + id);
+		} else {
+			distance = jedis.get(id.toString() + InfoType.DISTANCE.getKeyPrefix());
+			averageSpeed = jedis.get(id.toString() + InfoType.AVERAGE_SPEED.getKeyPrefix());
+		}
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+		return new TaxiData(id.toString(), round(distance), round(averageSpeed));
+	}
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Monitoring tool");
+	private void printData(List<TaxiData> taxis) {
+		System.out.println("\033[H\033[2J");
+		System.out.flush();
+		System.out.println("Taxi ID\t\tDistance (km)\tAverage Speed (km/h)");
+		System.out.println("----------------------------------------------------");
+		for (TaxiData taxi : taxis) {
+			System.out.println(
+					taxi.id.getValue() + "\t\t" + taxi.distance.getValue() + "\t\t" + taxi.averageSpeed.getValue());
+		}
+	}
 
-        // Label
-        Label label = new Label("Monitoring tool");
-        label.setTextFill(Color.DARKBLUE);
-        label.setFont(Font.font("Calibri", FontWeight.BOLD, 36));
-        HBox hb = new HBox();
-        hb.setAlignment(Pos.CENTER);
-        hb.getChildren().add(label);
+	private String round(String value) {
+		if (value == null) {
+			return "N/A";
+		}
 
-        // Table
-        TableView table = new TableView();
-        TableColumn taxiIdCol = new TableColumn("Taxi ID");
-        taxiIdCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("id"));
-        TableColumn distanceCol = new TableColumn("Distance (km)");
-        distanceCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("distance"));
-        TableColumn averageSpeedCol = new TableColumn("Average Speed (km/h)");
-        averageSpeedCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("averageSpeed"));
+		Double val = Double.parseDouble(value);
+		return DECIMAL_FORMAT.format(val);
+	}
 
-        table.getColumns().setAll(taxiIdCol, distanceCol, averageSpeedCol);
-        table.setPrefWidth(750);
-        table.setPrefHeight(600);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+	public static void main(String[] args) {
+		isMonitorForOptimizedTopology = (args.length == 1 && args[0] == "true");
+		launch(args);
+	}
 
-        // Vbox
-        VBox vbox = new VBox(20);
-        vbox.setPadding(new Insets(25, 25, 25, 25));;
-        vbox.getChildren().addAll(hb, table);
+	@Override
+	public void start(Stage primaryStage) {
+		primaryStage.setTitle("Monitoring tool");
 
-        // Scene
-        primaryStage.setScene(new Scene(vbox, 600, 600));
-        primaryStage.show();
+		// Label
+		Label label = new Label("Monitoring tool");
+		label.setTextFill(Color.DARKBLUE);
+		label.setFont(Font.font("Calibri", FontWeight.BOLD, 36));
+		HBox hb = new HBox();
+		hb.setAlignment(Pos.CENTER);
+		hb.getChildren().add(label);
 
-        RedisMonitor monitor = new RedisMonitor();
+		// Table
+		TableView table = new TableView();
+		TableColumn taxiIdCol = new TableColumn("Taxi ID");
+		taxiIdCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("id"));
+		TableColumn distanceCol = new TableColumn("Distance (km)");
+		distanceCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("distance"));
+		TableColumn averageSpeedCol = new TableColumn("Average Speed (km/h)");
+		averageSpeedCol.setCellValueFactory(new PropertyValueFactory<TaxiData, String>("averageSpeed"));
 
-        new Thread(new Runnable() {
-            public void run() {
-                monitor.run(table);
-            }
-        }).start();
-    }
+		table.getColumns().setAll(taxiIdCol, distanceCol, averageSpeedCol);
+		table.setPrefWidth(750);
+		table.setPrefHeight(600);
+		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-    public static class TaxiData {
+		// Vbox
+		VBox vbox = new VBox(20);
+		vbox.setPadding(new Insets(25, 25, 25, 25));
+		;
+		vbox.getChildren().addAll(hb, table);
 
-        StringProperty id = new SimpleStringProperty();;
-        StringProperty distance = new SimpleStringProperty();;
-        StringProperty averageSpeed = new SimpleStringProperty();;
+		// Scene
+		primaryStage.setScene(new Scene(vbox, 600, 600));
+		primaryStage.show();
 
-        TaxiData(String id, String distance, String averageSpeed) {
-            this.id.set(id);
-            this.distance.set(distance);
-            this.averageSpeed.set(averageSpeed);
-        }
+		RedisMonitor monitor = new RedisMonitor();
 
-        public String getId() {
-            return id.get();
-        }
+		new Thread(new Runnable() {
+			public void run() {
+				monitor.run(table);
+			}
+		}).start();
+	}
 
-        public StringProperty idProperty() {
-            return id;
-        }
+	public static class TaxiData {
 
-        public void setId(String id) {
-            this.id.set(id);
-        }
+		StringProperty id = new SimpleStringProperty();;
+		StringProperty distance = new SimpleStringProperty();;
+		StringProperty averageSpeed = new SimpleStringProperty();;
 
-        public String getDistance() {
-            return distance.get();
-        }
+		TaxiData(String id, String distance, String averageSpeed) {
+			this.id.set(id);
+			this.distance.set(distance);
+			this.averageSpeed.set(averageSpeed);
+		}
 
-        public StringProperty distanceProperty() {
-            return distance;
-        }
+		public String getId() {
+			return id.get();
+		}
 
-        public void setDistance(String distance) {
-            this.distance.set(distance);
-        }
+		public StringProperty idProperty() {
+			return id;
+		}
 
-        public String getAverageSpeed() {
-            return averageSpeed.get();
-        }
+		public void setId(String id) {
+			this.id.set(id);
+		}
 
-        public StringProperty averageSpeedProperty() {
-            return averageSpeed;
-        }
+		public String getDistance() {
+			return distance.get();
+		}
 
-        public void setAverageSpeed(String averageSpeed) {
-            this.averageSpeed.set(averageSpeed);
-        }
-    }
+		public StringProperty distanceProperty() {
+			return distance;
+		}
+
+		public void setDistance(String distance) {
+			this.distance.set(distance);
+		}
+
+		public String getAverageSpeed() {
+			return averageSpeed.get();
+		}
+
+		public StringProperty averageSpeedProperty() {
+			return averageSpeed;
+		}
+
+		public void setAverageSpeed(String averageSpeed) {
+			this.averageSpeed.set(averageSpeed);
+		}
+	}
 }
