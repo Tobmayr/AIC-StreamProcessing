@@ -30,7 +30,7 @@ cd ~/Desktop
 
 # start the data provider which produces data into a kafka topic
 # it takes the submission speed as the only parameter which is a speedup-factor
-# i.e. 100 makes 100 (virtual) seconds in a single wall-clock second
+# i.e. 100 makes 100 (virtual) seconds go by in a single wall-clock second
 ./startProvider.sh speedup-factor
 
 # open a browser pointing to the dashboard
