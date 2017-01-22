@@ -16,10 +16,6 @@ public class CalculateDistance extends Aggregator<DistanceState> {
 
     private DistanceStateMapper mapper;
 
-    public CalculateDistance() {
-        super(true);
-    }
-
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
         super.prepare(conf, context);

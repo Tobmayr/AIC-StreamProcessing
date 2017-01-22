@@ -26,10 +26,6 @@ public class CalculateSpeed extends Aggregator<SpeedState> {
 
     private StateObjectMapper<SpeedState> mapper;
 
-    public CalculateSpeed() {
-        super(true);
-    }
-
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
         super.prepare(conf, context);

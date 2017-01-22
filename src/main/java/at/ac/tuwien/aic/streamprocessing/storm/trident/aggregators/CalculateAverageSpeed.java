@@ -15,10 +15,6 @@ public class CalculateAverageSpeed extends Aggregator<AverageSpeedState> {
 
     private StateObjectMapper<AverageSpeedState> mapper;
 
-    public CalculateAverageSpeed() {
-        super(false);
-    }
-
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
         super.prepare(conf, context);

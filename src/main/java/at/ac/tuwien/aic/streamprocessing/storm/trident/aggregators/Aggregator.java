@@ -12,12 +12,6 @@ import java.util.Map;
 
 public abstract class Aggregator<T extends StateObject> extends BaseAggregator<Map<Integer, T>> {
 
-    private boolean skipFirst; // indicator for needing at least two data points in order to compute a meaningful value
-
-    public Aggregator(boolean skipFirst) {
-        this.skipFirst = skipFirst;
-    }
-
     @Override
     public Map<Integer, T> init(Object batchId, TridentCollector collector) {
         return new HashMap<>();

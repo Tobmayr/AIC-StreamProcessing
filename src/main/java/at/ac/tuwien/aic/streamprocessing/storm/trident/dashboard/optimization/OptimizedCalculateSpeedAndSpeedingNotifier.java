@@ -32,7 +32,6 @@ public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<Speed
     private StateObjectMapper<SpeedState> mapper;
 
     public OptimizedCalculateSpeedAndSpeedingNotifier(String dashboardAddress) {
-        super(true);
         this.dashboardAddress = dashboardAddress;
     }
 
