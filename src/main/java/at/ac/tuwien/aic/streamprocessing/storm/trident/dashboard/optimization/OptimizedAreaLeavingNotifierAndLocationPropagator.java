@@ -43,17 +43,11 @@ public class OptimizedAreaLeavingNotifierAndLocationPropagator extends Dashboard
             if (distance >= Constants.PROHIBITED_DISTANCE) {
                 violation = "REMOVE";
             } else if (distance >= Constants.WARNING_DISTANCE) {
-                violation = "WARNING";
+                violation = "W";
             }
             map.put("violation", violation);
             sendJSONPostRequest(map);
             idTimeMap.put(taxiId, currentTime);
-        }
-
-        // the taxi is more than 15 km away from the forbidden city, discard
-        // this tuple
-        if (distance >= Constants.PROHIBITED_DISTANCE) {
-            return false;
         }
 
         return true;
