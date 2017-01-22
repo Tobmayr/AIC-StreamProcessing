@@ -46,7 +46,6 @@
         <div class="">
             <div class="col-sm-0 col-sm-offset-0 col-md-0 col-md-offset-0 main">
                 <h1 class="page-header">Dashboard</h1>
-
                 <div class="row placeholders">
                     <div class="col-xs-6 col-sm-7 placeholder">
                         <div style="font-size: 400%" id="currentlyDrivingTaxis">42</div>
@@ -60,35 +59,40 @@
                     </div>
                 </div>
 
-                <div id="map" style="width:100%; height: 700px;zoom:0.9"></div>
+                <div id="map" style="width:100%; height: 530px;zoom:0.7"></div>
 
-                <h2 class="sub-header">Area violations</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>Taxi</th>
-                            <th>Distance Driven</th>
-                        </tr>
-                        </thead>
-                        <tbody id="areaViolations">
-                        </tbody>
-                    </table>
-                </div>
-
-                <h2 class="sub-header">Speeding incidents</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>Taxi</th>
-                            <th>Speed (km/h)</th>
-                            <th>Over Limit (km/h)</th>
-                        </tr>
-                        </thead>
-                        <tbody id="speedingIncidents">
-                        </tbody>
-                    </table>
+                <div class="row placeholders">
+                    <div class="col-xs-6 col-sm-6 placeholder">
+                        <h2 class="sub-header">Area violations</h2>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Taxi</th>
+                                    <th>Distance Driven</th>
+                                </tr>
+                                </thead>
+                                <tbody id="areaViolations">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-6 placeholder">
+                        <h2 class="sub-header">Speeding incidents</h2>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Taxi</th>
+                                    <th>Speed (km/h)</th>
+                                    <th>Over Limit (km/h)</th>
+                                </tr>
+                                </thead>
+                                <tbody id="speedingIncidents">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
