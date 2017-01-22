@@ -113,8 +113,11 @@ public class RedisMonitor extends Application {
 	private TaxiData queryTaxi(Integer id) {
 		String distance, averageSpeed;
 		if (isMonitorForOptimizedTopology) {
-			distance = jedis.get("tridentState:distance:" + id);
-			averageSpeed = jedis.get("tridentState:avgSpeed:" + id);
+	
+			distance = jedis.get("tridentState:distance:" + id).split(",")[2];
+		    String avgSpeedState=	jedis.get("tridentState:avgSpeed:" + id);
+		    averageSpeed=Double.toString(Double.valueOf(avgSpeedState.split(",")[1])/Integer.valueOf(avgSpeedState.split(",")[0]));
+		
 		} else {
 			distance = jedis.get(id.toString() + InfoType.DISTANCE.getKeyPrefix());
 			averageSpeed = jedis.get(id.toString() + InfoType.AVERAGE_SPEED.getKeyPrefix());
@@ -144,7 +147,8 @@ public class RedisMonitor extends Application {
 	}
 
 	public static void main(String[] args) {
-		isMonitorForOptimizedTopology = (args.length == 1 && args[0] == "true");
+		isMonitorForOptimizedTopology = (args.length == 1 && args[0].equals("true"));
+		System.out.println(isMonitorForOptimizedTopology);
 		launch(args);
 	}
 
