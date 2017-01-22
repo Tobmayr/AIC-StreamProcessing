@@ -26,5 +26,6 @@ public class Constants {
     public static final String NOTIFY_AREA_VIOLATION_URI = "/violation";
     public static final String NOTIFY_SPEEDING_INCIDENT_URI = "/incident";
     public static final String NOTIFY_TAXI_STOPPED_URI = "/stop";
+    public static final String OPTIMIZED_PROPAGATE_LOCATION_URI="/location";
 
 }

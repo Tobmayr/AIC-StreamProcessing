@@ -2,8 +2,8 @@ var map;
 var markers = [];
 var incidents = [];
 var violations = [];
-var taxiCount="";
-var overallDistance="";
+var taxiCount="0";
+var overallDistance="0";
 
 // handle requests for updating the UI
 var socket = io.connect('http://localhost:3000');

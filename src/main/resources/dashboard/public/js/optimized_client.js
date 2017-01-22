@@ -2,8 +2,8 @@ var map;
 var markers = [];
 var incidents = [];
 var violations = [];
-var taxiCount="";
-var overallDistance="";
+var taxiCount="0";
+var overallDistance="0";
 
 // handle requests for updating the UI
 var socket = io.connect('http://localhost:3000');
@@ -11,22 +11,26 @@ setInterval(function(){
     reloadUIElements();
 },  1000);
 
-socket.on('add', function (data) {
-    createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
+socket.on('location', function (data) {
+    if (data.violation=='REMOVE'){
+        removeTaxi(data.taxiId);
+    }else{
+        createOrMoveMarker(map, data.taxiId, data.latitude, data.longitude);
+        if (data.violation=='WARNING'){
+            violations[data.taxiId] = data.distance;
+        }
+    }
+
+
 });
+
 
 socket.on('stats', function (data) {
     taxiCount=data.taxiCount;
     overallDistance=parseFloat(data.distance).toFixed(2);
 });
 
-socket.on('violation', function (data) {
-    violations[data.taxiId] = data.distance;
-    if (data.distance >= 15.00) {
-        removeTaxi(data.taxiId);
-    }
 
-});
 
 socket.on('stop', function (data) {
     removeTaxi(data.taxiId);

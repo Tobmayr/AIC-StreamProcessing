@@ -16,6 +16,13 @@ app.get('/2', function (req, res) {
    res.render('optimization.html');
 });
 
+//Propagate loctaion information and potential area violation
+app.post('/location', function (req, res) {
+   console.log(req.body);
+   io.sockets.emit('location', req.body);
+   res.send('success');
+});
+
 // add new taxis or update an existing ones
 app.post('/add', function (req, res) {
    console.log(req.body);
@@ -50,6 +57,8 @@ app.post('/stop', function (req, res) {
     io.sockets.emit('stop', req.body);
     res.send('success');
 });
+
+
 
 server.listen(3000, function () {
    console.log('Server started on port 3000')
