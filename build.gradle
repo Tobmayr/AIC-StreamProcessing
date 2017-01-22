@@ -29,11 +29,11 @@ configurations.all {
     }
 }
 
-/*configurations {
+configurations {
     includedInStormJar
     excludedFromStormJar.extendsFrom includedInStormJar
     compile.extendsFrom excludedFromStormJar
-}*/
+}
 
 dependencies {
     compile(group: 'org.apache.kafka', name: 'kafka_2.11', version: '0.10.1.0') {
@@ -65,10 +65,13 @@ dependencies {
 
     testCompile "org.mockito:mockito-core:1.+"
 
-    /*excludedFromStormJar "org.apache.storm:storm-core:1.0.2"
+    excludedFromStormJar "org.apache.storm:storm-core:1.0.2"
+    excludedFromStormJar "ch.qos.logback:logback-classic:1.1.7"
+    //excludedFromStormJar "commons-logging:commons-logging:1.1.1" // this one is actually needed
+
     includedInStormJar "org.apache.storm:storm-redis:1.0.2"
-    includedInStormJar "org.apache.storm:storm-kafka:1.0.2"
-    includedInStormJar "org.apache.commons:commons-pool2:2.4.2"*/
+    //includedInStormJar "org.apache.storm:storm-kafka:1.0.2" // this conflicts with the stormJar DoubleTrouble with Double.classes
+    includedInStormJar "org.apache.commons:commons-pool2:2.4.2"
 }
 
 checkstyle {
@@ -132,6 +135,11 @@ task bmOptimizedTopology(type: JavaExec) {
     args "benchmark"
 }
 
+task runOptimizedTopology(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "at.ac.tuwien.aic.streamprocessing.storm.OptimizedTridentProcessingTopology"
+}
+
 
 task stormJar(type: Jar) {
     dependsOn configurations.runtime
@@ -140,6 +148,7 @@ task stormJar(type: Jar) {
             it.isDirectory() ? it : zipTree(it)
         }
     }
+    exclude "org/slf4j/"
     exclude "META-INF/*.SF"
     exclude "META-INF/*.DSA"
     exclude "META-INF/*.RSA"
