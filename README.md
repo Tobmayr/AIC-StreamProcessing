@@ -1,4 +1,3 @@
-
 # Advanced Internet Computing Group2 Team1
 
 [Source of this Repository](http://hyde.infosys.tuwien.ac.at/aic2016/G2T1v2/commits/master)
@@ -89,26 +88,27 @@ rm -rf /tmp/kafka-logs
 ```
 
 Die `NoSuchElementException` kommt wenn man zuwenige `Values` aus einem `Operator` emitted als in der Topologie gefordert.
+
 ```
 KeeperErrorCode = NoNode for /brokers/topics/test-topic/partitions
 ./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic taxi
 ERROR org.apache.kafka.common.errors.InvalidReplicationFactorException: replication factor: 1 larger than available brokers: 0
 
-	
+
 ```
 
-`` testing
+``` testing
 ctrl+z
 
 systemctl start redis-server
 ./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --alter --zookeeper localhost:2181  --partitions 5 --topic taxi
-	
+
 ps aux | grep kafka
 ps aux | grep zookeeper
 ps aux | grep redis
 ps aux | grep SNAPSHOT 
 sudo systemctl stop redis-server
-	
+
 ./gradlew test
 ```
 
@@ -138,6 +138,7 @@ INSERT INTO taxiData SELECT id, datetime(max(timestamp),'+1 second') AS timestam
 
 # 3. Output query to file
 sqlite3.exe -csv taxiData "SELECT * FROM taxiData ORDER BY 2" > testData_merged_sorted.csv
+
 
 ```
 Redis Deskop Manager
