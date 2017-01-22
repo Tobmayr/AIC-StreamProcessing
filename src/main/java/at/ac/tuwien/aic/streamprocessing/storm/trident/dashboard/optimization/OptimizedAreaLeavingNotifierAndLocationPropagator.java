@@ -39,11 +39,11 @@ public class OptimizedAreaLeavingNotifierAndLocationPropagator extends Dashboard
             map.put("longitude", Double.toString(longitude));
             map.put("distance", Double.toString(distance));
 
-            String violation = "none";
+            String violation = "NONE";
             if (distance >= Constants.PROHIBITED_DISTANCE) {
-                violation = "WARNING";
-            } else if (distance >= Constants.WARNING_DISTANCE) {
                 violation = "REMOVE";
+            } else if (distance >= Constants.WARNING_DISTANCE) {
+                violation = "WARNING";
             }
             map.put("violation", violation);
             sendJSONPostRequest(map);
