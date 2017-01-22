@@ -135,10 +135,6 @@ task bmOptimizedTopology(type: JavaExec) {
     args "benchmark"
 }
 
-task runOptimizedTopology(type: JavaExec) {
-    classpath sourceSets.main.runtimeClasspath
-    main = "at.ac.tuwien.aic.streamprocessing.storm.OptimizedTridentProcessingTopology"
-}
 
 
 task stormJar(type: Jar) {
