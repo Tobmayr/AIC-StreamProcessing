@@ -40,4 +40,4 @@ cd ~/Desktop
 Testdata
 --------
 
-We provide a single file containing the test data (merged, sorted, with end tokens to) which can be found under ~/testdata.
+We provide a single file containing the test data (merged, sorted, with end tokens) which can be found under ~/testdata.
