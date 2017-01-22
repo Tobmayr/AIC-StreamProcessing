@@ -3,9 +3,9 @@ package at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 
 public class DistanceState implements StateObject {
-    private Double latitude;  // last position
+    private Double latitude; // last position
     private Double longitude; // last position
-    private Double distance;  // distance travelled so far
+    private Double distance; // distance travelled so far
 
     public DistanceState(Double latitude, Double longitude, Double distance) {
         this.latitude = latitude;
@@ -27,10 +27,6 @@ public class DistanceState implements StateObject {
 
     @Override
     public String toString() {
-        return "RedisDistanceState{" +
-                "latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", distance=" + distance +
-                '}';
+        return "RedisDistanceState{" + "latitude=" + latitude + ", longitude=" + longitude + ", distance=" + distance + '}';
     }
 }

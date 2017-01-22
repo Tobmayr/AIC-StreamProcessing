@@ -21,9 +21,6 @@ public class AverageSpeedState implements StateObject {
 
     @Override
     public String toString() {
-        return "AverageSpeedState{" +
-                "observations=" + observations +
-                ", speedSum=" + speedSum +
-                '}';
+        return "AverageSpeedState{" + "observations=" + observations + ", speedSum=" + speedSum + '}';
     }
 }

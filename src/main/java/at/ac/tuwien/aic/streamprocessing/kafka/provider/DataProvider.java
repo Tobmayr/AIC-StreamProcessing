@@ -1,15 +1,5 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
-import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
-import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
-import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.storm.utils.Time;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -20,6 +10,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.storm.utils.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import at.ac.tuwien.aic.streamprocessing.kafka.producer.TaxiEntryKafkaProducer;
+import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
 
 /**
  * Data Provider provides data to Kafka (i.e. TaxiEntry objects) by parsing a CSV file containing sorted entries by timestamp
@@ -104,9 +105,7 @@ public class DataProvider {
                 return new Batch(entries, entry);
             }
 
-            long sameEntryCount = entries.stream()
-                    .filter(e -> e.getTaxiId() == entry.getTaxiId())
-                    .filter(e -> e.getTimestamp().isEqual(entry.getTimestamp()))
+            long sameEntryCount = entries.stream().filter(e -> e.getTaxiId() == entry.getTaxiId()).filter(e -> e.getTimestamp().isEqual(entry.getTimestamp()))
                     .count();
 
             if (sameEntryCount == 0) {
@@ -135,7 +134,7 @@ public class DataProvider {
         }
     }
 
-    private Properties createProducerProperties(){
+    private Properties createProducerProperties() {
         Properties producerProperties = new Properties();
         producerProperties.put("bootstrap.servers", KAFKA_URI);
         producerProperties.put("acks", "1");
@@ -154,10 +153,9 @@ public class DataProvider {
         }
     }
 
-
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-           logger.error("USAGE: <absolute-path-of-input-data> <topic-name> <speed-factor-to-divide-seconds>");
+            logger.error("USAGE: <absolute-path-of-input-data> <topic-name> <speed-factor-to-divide-seconds>");
             return;
         }
 

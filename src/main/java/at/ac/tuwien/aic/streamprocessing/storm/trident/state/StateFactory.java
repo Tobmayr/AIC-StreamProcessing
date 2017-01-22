@@ -1,15 +1,16 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
+import java.util.Map;
+
+import org.apache.storm.task.IMetricsContext;
+import org.apache.storm.trident.state.State;
+
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed.AverageSpeedState;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance.DistanceState;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapperFactory;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
-import org.apache.storm.task.IMetricsContext;
-import org.apache.storm.trident.state.State;
-
-import java.util.Map;
 
 public class StateFactory<T extends StateObject> implements org.apache.storm.trident.state.StateFactory {
     private final String type;

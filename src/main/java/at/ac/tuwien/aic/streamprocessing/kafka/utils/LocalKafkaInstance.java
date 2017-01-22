@@ -1,10 +1,11 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.utils;
 
-import kafka.admin.AdminUtils;
-import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
+
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.io.FileUtils;
@@ -16,12 +17,11 @@ import org.apache.curator.test.TestingServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
-
+import kafka.admin.AdminUtils;
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServerStartable;
+import kafka.utils.ZKStringSerializer$;
+import kafka.utils.ZkUtils;
 
 public class LocalKafkaInstance {
     private final static Logger logger = LoggerFactory.getLogger(LocalKafkaInstance.class);
@@ -66,8 +66,7 @@ public class LocalKafkaInstance {
         logger.info("Started zookeeper.");
 
         ExponentialBackoffRetry retryPolicy = new BoundedExponentialBackoffRetry(200, 5000, 5);
-        CuratorFramework zookeeper = CuratorFrameworkFactory.newClient(
-                zookeeperServer.getConnectString(), retryPolicy);
+        CuratorFramework zookeeper = CuratorFrameworkFactory.newClient(zookeeperServer.getConnectString(), retryPolicy);
         zookeeper.start();
 
         String kafkaLogDir = temporaryLogDir.resolve("kafka-logs").toString();
@@ -111,8 +110,7 @@ public class LocalKafkaInstance {
 
         int partitions = 1;
         int replications = 1;
-        AdminUtils.createTopic(zkUtils, topicName, partitions, replications, AdminUtils.createTopic$default$5(),
-                AdminUtils.createTopic$default$6());
+        AdminUtils.createTopic(zkUtils, topicName, partitions, replications, AdminUtils.createTopic$default$5(), AdminUtils.createTopic$default$6());
 
         zkUtils.close();
 

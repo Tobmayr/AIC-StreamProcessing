@@ -14,7 +14,6 @@ public class PropagateLocation extends DashboardNotifier {
     private Map<Integer, Long> idTimeMap = Collections.synchronizedMap(new HashMap<Integer, Long>());
     private final Logger logger = LoggerFactory.getLogger(PropagateLocation.class);
 
-    
     public PropagateLocation(String dashboardAddress) {
         super(dashboardAddress + Constants.PROPAGATE_LOCATION_URI);
 

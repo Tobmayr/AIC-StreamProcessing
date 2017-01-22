@@ -6,10 +6,14 @@ public class Haversine {
     /**
      * src https://rosettacode.org/wiki/Haversine_formula#Java
      *
-     * @param lat1 start Position
-     * @param lon1 start Position
-     * @param lat2 end Position
-     * @param lon2 end Position
+     * @param lat1
+     *            start Position
+     * @param lon1
+     *            start Position
+     * @param lat2
+     *            end Position
+     * @param lon2
+     *            end Position
      * @return distance in Kilometers
      */
     public static double calculateDistanceBetween(double lat1, double lon1, double lat2, double lon2) {

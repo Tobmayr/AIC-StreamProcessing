@@ -1,14 +1,15 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.storm.trident.operation.BaseAggregator;
 import org.apache.storm.trident.operation.TridentCollector;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
 
-import java.util.HashMap;
-import java.util.Map;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 
 public abstract class Aggregator<T extends StateObject> extends BaseAggregator<Map<Integer, T>> {
 
@@ -47,6 +48,7 @@ public abstract class Aggregator<T extends StateObject> extends BaseAggregator<M
     }
 
     protected abstract StateObjectMapper<T> getMapper();
+
     protected abstract T compute(T previous, TridentTuple tuple);
 
     @Override

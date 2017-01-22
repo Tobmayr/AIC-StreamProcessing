@@ -1,13 +1,14 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
-import org.apache.storm.trident.state.State;
-import org.apache.storm.trident.tuple.TridentTuple;
-import redis.clients.jedis.Jedis;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.storm.trident.state.State;
+import org.apache.storm.trident.tuple.TridentTuple;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import redis.clients.jedis.Jedis;
 
 public class RedisState<T extends StateObject> implements State {
 
@@ -57,9 +58,7 @@ public class RedisState<T extends StateObject> implements State {
     public List<T> getAll(List<Integer> ids) {
         Jedis jedis = new Jedis(redisHost, redisPort);
 
-        List<T> states = ids.stream()
-                .map(id -> get(jedis, id))
-                .collect(Collectors.toList());
+        List<T> states = ids.stream().map(id -> get(jedis, id)).collect(Collectors.toList());
 
         jedis.close();
 
@@ -80,8 +79,6 @@ public class RedisState<T extends StateObject> implements State {
     }
 
     protected List<T> transformTuples(List<TridentTuple> tuples) {
-        return tuples.stream()
-                .map(getMapper()::fromTuple)
-                .collect(Collectors.toList());
+        return tuples.stream().map(getMapper()::fromTuple).collect(Collectors.toList());
     }
 }

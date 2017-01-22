@@ -1,8 +1,9 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 
 public class SpeedStateMapper implements StateObjectMapper<SpeedState> {
 
@@ -24,12 +25,8 @@ public class SpeedStateMapper implements StateObjectMapper<SpeedState> {
 
     @Override
     public SpeedState fromTuple(TridentTuple tuple) {
-        return new SpeedState(
-                tuple.getStringByField("timestamp"),
-                tuple.getDoubleByField("latitude"),
-                tuple.getDoubleByField("longitude"),
-                tuple.getDoubleByField("speed")
-        );
+        return new SpeedState(tuple.getStringByField("timestamp"), tuple.getDoubleByField("latitude"), tuple.getDoubleByField("longitude"),
+                tuple.getDoubleByField("speed"));
     }
 
     @Override
@@ -39,23 +36,14 @@ public class SpeedStateMapper implements StateObjectMapper<SpeedState> {
 
     @Override
     public SpeedState parseState(TridentTuple tuple) {
-        return new SpeedState(
-                tuple.getStringByField("prev_timestamp"),
-                tuple.getDoubleByField("prev_latitude"),
-                tuple.getDoubleByField("prev_longitude"),
-                tuple.getDoubleByField("speed")
-        );
+        return new SpeedState(tuple.getStringByField("prev_timestamp"), tuple.getDoubleByField("prev_latitude"), tuple.getDoubleByField("prev_longitude"),
+                tuple.getDoubleByField("speed"));
 
     }
 
     @Override
     public String serializeToRedis(SpeedState state) {
-        return String.format("%s,%s,%s,%s",
-                state.getTimestamp(),
-                state.getLatitude(),
-                state.getLongitude(),
-                state.getSpeed()
-        );
+        return String.format("%s,%s,%s,%s", state.getTimestamp(), state.getLatitude(), state.getLongitude(), state.getSpeed());
     }
 
     @Override
