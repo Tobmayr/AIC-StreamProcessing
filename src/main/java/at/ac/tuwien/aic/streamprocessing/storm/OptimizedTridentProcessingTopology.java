@@ -15,6 +15,7 @@ import org.apache.storm.trident.Stream;
 import org.apache.storm.trident.TridentState;
 import org.apache.storm.trident.TridentTopology;
 import org.apache.storm.trident.operation.BaseFilter;
+import org.apache.storm.trident.testing.MemoryMapState;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import at.ac.tuwien.aic.streamprocessing.kafka.utils.LocalKafkaInstance;
 import at.ac.tuwien.aic.streamprocessing.storm.spout.TaxiEntryKeyValueScheme;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateAverageSpeed;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CalculateDistance;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.CountAndDistanceAggregator;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.DrivingTaxiFilter;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.PropagateInformation;
 import at.ac.tuwien.aic.streamprocessing.storm.trident.persist.InfoType;
@@ -52,7 +54,7 @@ public class OptimizedTridentProcessingTopology {
     private final String redisHost;
     private final int redisPort;
 
-    private final String dashbaordAdress;
+    private final String dashboardAdress;
 
     private final BaseFilter speedTupleListener;
     private final BaseFilter avgSpeedTupleListener;
@@ -69,7 +71,7 @@ public class OptimizedTridentProcessingTopology {
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
-        this.dashbaordAdress = dashboardAdress;
+        this.dashboardAdress = dashboardAdress;
 
         this.speedTupleListener = null;
         this.avgSpeedTupleListener = null;
@@ -78,7 +80,7 @@ public class OptimizedTridentProcessingTopology {
 
     public OptimizedTridentProcessingTopology(String topic, String redisHost, int redisPort, String dashboardAdress, BaseFilter speedTupleListener,
                                      BaseFilter avgSpeedTupleListener, BaseFilter distanceTupleListener) {
-        this.dashbaordAdress = dashboardAdress;
+        this.dashboardAdress = dashboardAdress;
         this.topic = topic;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
@@ -169,16 +171,16 @@ public class OptimizedTridentProcessingTopology {
         }
 
         inputStream = inputStream
-                .filter(new DrivingTaxiFilter(dashbaordAdress));
+                .filter(new DrivingTaxiFilter(dashboardAdress));
 
         // notify dashboard of occurring area violations
-        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifierAndLocationPropagator(dashbaordAdress));
+        inputStream = inputStream.each(TaxiFields.BASE_FIELDS, new OptimizedAreaLeavingNotifierAndLocationPropagator(dashboardAdress));
 
         // setup speed aggregator and notify dashboard if taxi is speeding
         TridentState speed = topology.newStaticState(StateFactory.createSpeedStateFactory(redisHost, redisPort));
         Stream speedStream = inputStream.stateQuery( // query the state for each taxi id
                 speed, TaxiFields.ID_ONLY_FIELDS, new SpeedStateQuery(), TaxiFields.SPEED_STATE_FIELDS).partitionAggregate( // batch-process entries
-                TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new OptimizedCalculateSpeedAndSpeedingNotifier(dashbaordAdress), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS);
+                TaxiFields.CALCULATE_SPEED_INPUT_FIELDS, new OptimizedCalculateSpeedAndSpeedingNotifier(dashboardAdress), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS);
 
         // update the new speed states
         speedStream.partitionPersist(StateFactory.createSpeedStateFactory(redisHost, redisPort), TaxiFields.CALCULATE_SPEED_OUTPUT_FIELDS,
@@ -217,14 +219,18 @@ public class OptimizedTridentProcessingTopology {
             distanceStream = distanceStream.toStream().each(TaxiFields.CALCULATE_DISTANCE_OUTPUT_FIELDS, distanceTupleListener);
         }
 
+        
+    	distanceStream = distanceStream
+				.persistentAggregate(new MemoryMapState.Factory(), TaxiFields.INFORMATION_INPUT_FIELDS,
+						new CountAndDistanceAggregator(), TaxiFields.INFORMATION_OUTPUT_FIELDS)
+				.newValuesStream();
         // aggregate amount of taxis + overall distance and propagate to dashboard
-        distanceStream = distanceStream.filter(TaxiFields.INFORMATION_INPUT_FIELDS, new PropagateInformation(dashbaordAdress));
+    	distanceStream.filter(TaxiFields.INFORMATION_OUTPUT_FIELDS, new PropagateInformation(dashboardAdress));
 
         if (BENCHMARK) {
-            distanceStream.filter(new TupleSpeedMonitor("final", redisHost, redisPort));
+            avgSpeedStream.filter(new TupleSpeedMonitor("final", redisHost, redisPort));
         }
 
-        distanceStream.parallelismHint(5);
         return topology.build();
     }
 
