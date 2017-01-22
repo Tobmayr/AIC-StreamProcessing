@@ -26,6 +26,4 @@ public class SpeedingNotifier extends DashboardNotifier {
         return true;
     }
 
-  
-
 }

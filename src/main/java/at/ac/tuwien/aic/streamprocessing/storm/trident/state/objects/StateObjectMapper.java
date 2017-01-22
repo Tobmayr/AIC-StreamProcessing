@@ -16,5 +16,6 @@ public interface StateObjectMapper<T extends StateObject> {
 
     // redis (de)serialization
     String serializeToRedis(T state);
+
     T deserializeFromRedis(String value);
 }

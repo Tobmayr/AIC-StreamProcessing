@@ -1,13 +1,11 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.dashboard.optimization;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
-import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.Aggregator;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateMapper;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Constants;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 import org.apache.storm.shade.org.apache.http.client.HttpClient;
 import org.apache.storm.shade.org.apache.http.client.methods.HttpPost;
 import org.apache.storm.shade.org.apache.http.entity.StringEntity;
@@ -17,11 +15,13 @@ import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
+import at.ac.tuwien.aic.streamprocessing.model.utils.Timestamp;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.aggregators.Aggregator;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedState;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.speed.SpeedStateMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Constants;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.util.Haversine;
 
 public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<SpeedState> {
 
@@ -35,13 +35,11 @@ public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<Speed
         this.dashboardAddress = dashboardAddress;
     }
 
-
     @Override
     public void prepare(Map conf, TridentOperationContext context) {
         super.prepare(conf, context);
         this.mapper = new SpeedStateMapper();
     }
-
 
     @Override
     protected SpeedState compute(SpeedState previous, TridentTuple tuple) {
@@ -50,9 +48,7 @@ public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<Speed
         Double currentLatitude = tuple.getDoubleByField("latitude");
         Double currentLongitude = tuple.getDoubleByField("longitude");
 
-        Double distance = Haversine.calculateDistanceBetween(
-                previous.getLatitude(), previous.getLongitude(),
-                currentLatitude, currentLongitude);
+        Double distance = Haversine.calculateDistanceBetween(previous.getLatitude(), previous.getLongitude(), currentLatitude, currentLongitude);
 
         LocalDateTime startTime = Timestamp.parse(previous.getTimestamp());
         LocalDateTime endTime = Timestamp.parse(timestamp);
@@ -63,10 +59,10 @@ public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<Speed
         if (Double.compare(time, 0.0) == 0) {
             speed = 0.0;
         } else {
-            speed = distance / time;  // in kmh
+            speed = distance / time; // in kmh
         }
 
-        //Notify dashboard once if taxi is speeding over the limit
+        // Notify dashboard once if taxi is speeding over the limit
         if (speed >= Constants.SPEED_LIMIT) {
             Map<String, String> map = new HashMap<>();
             map.put("taxiId", Integer.toString(taxiId));
@@ -74,14 +70,8 @@ public class OptimizedCalculateSpeedAndSpeedingNotifier extends Aggregator<Speed
             sendJSONPostRequest(map, dashboardAddress + Constants.NOTIFY_SPEEDING_INCIDENT_URI);
         }
 
-        logger.debug(
-                "(speed): [taxiId={}, timestamp={}, latitude={}, longitude={}, speed={}]",
-                taxiId,
-                timestamp,
-                currentLatitude,
-                currentLongitude,
-                String.format("%.3f", speed)
-        );
+        logger.debug("(speed): [taxiId={}, timestamp={}, latitude={}, longitude={}, speed={}]", taxiId, timestamp, currentLatitude, currentLongitude,
+                String.format("%.3f", speed));
 
         return new SpeedState(timestamp, currentLatitude, currentLongitude, speed);
     }

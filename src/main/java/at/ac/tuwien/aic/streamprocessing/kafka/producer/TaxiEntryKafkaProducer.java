@@ -1,13 +1,14 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.producer;
 
-import at.ac.tuwien.aic.streamprocessing.kafka.provider.TaxiEntryProvider;
-import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
+import java.util.Properties;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Properties;
+import at.ac.tuwien.aic.streamprocessing.kafka.provider.TaxiEntryProvider;
+import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 
 /**
  * Producer which supplies records of taxi entries into a given kafka topic.
@@ -21,8 +22,10 @@ public class TaxiEntryKafkaProducer {
     /**
      * Instantiates a new TaxiEntryKafkaProducer.
      *
-     * @param topic           the topic into which the records should be produced.
-     * @param kafkaProperties the kafka properties describing the broker.
+     * @param topic
+     *            the topic into which the records should be produced.
+     * @param kafkaProperties
+     *            the kafka properties describing the broker.
      */
     public TaxiEntryKafkaProducer(String topic, Properties kafkaProperties) {
         this.topic = topic;
@@ -39,7 +42,8 @@ public class TaxiEntryKafkaProducer {
     /**
      * Produce one record for each taxi entry supplied by the given provider.
      *
-     * @param provider the provider supplying the taxi entries.
+     * @param provider
+     *            the provider supplying the taxi entries.
      */
     public void produce(TaxiEntryProvider provider) {
         provider.getEntries().forEach(entry -> {

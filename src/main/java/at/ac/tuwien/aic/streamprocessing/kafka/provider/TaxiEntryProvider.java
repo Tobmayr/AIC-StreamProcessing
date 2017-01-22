@@ -1,9 +1,8 @@
 package at.ac.tuwien.aic.streamprocessing.kafka.provider;
 
-import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
-
-import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 
 /**
  * Interface for providers which yield a stream of TaxiEntries.

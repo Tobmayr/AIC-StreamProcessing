@@ -8,7 +8,6 @@ import org.apache.storm.shade.org.apache.http.client.methods.HttpPost;
 import org.apache.storm.shade.org.apache.http.entity.StringEntity;
 import org.apache.storm.shade.org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.storm.trident.operation.BaseFilter;
-import org.apache.storm.trident.tuple.TridentTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,7 @@ public abstract class DashboardNotifier extends BaseFilter {
     public DashboardNotifier(String dashboardURI) {
         this.dashboardURI = dashboardURI;
     }
- 
+
     protected void sendJSONPostRequest(Map<String, String> parameters) {
         sendJSONPostRequest(parameters, dashboardURI);
     }

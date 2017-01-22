@@ -1,8 +1,9 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state.distance;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 
 public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
@@ -10,12 +11,7 @@ public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
     public Values toStateTuple(DistanceState state) {
         boolean actual_state = true;
 
-        return new Values(
-                state.getLatitude(),
-                state.getLongitude(),
-                state.getDistance(),
-                actual_state
-        );
+        return new Values(state.getLatitude(), state.getLongitude(), state.getDistance(), actual_state);
     }
 
     @Override
@@ -30,11 +26,7 @@ public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
     @Override
     public DistanceState fromTuple(TridentTuple tuple) {
-        return new DistanceState(
-                tuple.getDoubleByField("latitude"),
-                tuple.getDoubleByField("longitude"),
-                tuple.getDoubleByField("distance")
-        );
+        return new DistanceState(tuple.getDoubleByField("latitude"), tuple.getDoubleByField("longitude"), tuple.getDoubleByField("distance"));
     }
 
     @Override
@@ -44,20 +36,12 @@ public class DistanceStateMapper implements StateObjectMapper<DistanceState> {
 
     @Override
     public DistanceState parseState(TridentTuple tuple) {
-        return new DistanceState(
-                tuple.getDoubleByField("prev_latitude"),
-                tuple.getDoubleByField("prev_longitude"),
-                tuple.getDoubleByField("distance")
-        );
+        return new DistanceState(tuple.getDoubleByField("prev_latitude"), tuple.getDoubleByField("prev_longitude"), tuple.getDoubleByField("distance"));
     }
 
     @Override
     public String serializeToRedis(DistanceState state) {
-        return String.format("%s,%s,%s",
-                state.getLatitude(),
-                state.getLongitude(),
-                state.getDistance()
-        );
+        return String.format("%s,%s,%s", state.getLatitude(), state.getLongitude(), state.getDistance());
     }
 
     @Override

@@ -1,17 +1,17 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapperFactory;
-import org.apache.storm.trident.operation.TridentCollector;
-import org.apache.storm.trident.operation.TridentOperationContext;
-import org.apache.storm.trident.state.BaseQueryFunction;
-import org.apache.storm.trident.state.State;
-import org.apache.storm.trident.tuple.TridentTuple;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.storm.trident.operation.TridentCollector;
+import org.apache.storm.trident.operation.TridentOperationContext;
+import org.apache.storm.trident.state.BaseQueryFunction;
+import org.apache.storm.trident.tuple.TridentTuple;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObject;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapperFactory;
 
 public abstract class StateQuery<ST extends RedisState<T>, T extends StateObject> extends BaseQueryFunction<ST, T> {
     private final String type;
@@ -31,9 +31,7 @@ public abstract class StateQuery<ST extends RedisState<T>, T extends StateObject
 
     @Override
     public List<T> batchRetrieve(ST state, List<TridentTuple> args) {
-        List<Integer> ids = args.stream()
-                .map(t -> t.getIntegerByField("id"))
-                .collect(Collectors.toList());
+        List<Integer> ids = args.stream().map(t -> t.getIntegerByField("id")).collect(Collectors.toList());
 
         return state.getAll(ids);
     }

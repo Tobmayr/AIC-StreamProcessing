@@ -34,11 +34,6 @@ public class SpeedState implements StateObject {
 
     @Override
     public String toString() {
-        return "SpeedState{" +
-                "timestamp='" + timestamp + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", speed=" + speed +
-                '}';
+        return "SpeedState{" + "timestamp='" + timestamp + '\'' + ", latitude=" + latitude + ", longitude=" + longitude + ", speed=" + speed + '}';
     }
 }

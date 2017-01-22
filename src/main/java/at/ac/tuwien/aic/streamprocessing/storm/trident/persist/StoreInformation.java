@@ -2,9 +2,9 @@ package at.ac.tuwien.aic.streamprocessing.storm.trident.persist;
 
 import org.apache.storm.trident.operation.BaseFilter;
 import org.apache.storm.trident.tuple.TridentTuple;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import redis.clients.jedis.Jedis;
 
 public class StoreInformation extends BaseFilter {

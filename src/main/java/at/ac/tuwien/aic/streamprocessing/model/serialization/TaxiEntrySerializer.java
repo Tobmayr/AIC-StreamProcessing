@@ -1,15 +1,16 @@
 package at.ac.tuwien.aic.streamprocessing.model.serialization;
 
-import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
-import org.apache.kafka.common.serialization.Serializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.Map;
+
+import org.apache.kafka.common.serialization.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import at.ac.tuwien.aic.streamprocessing.model.TaxiEntry;
 
 /**
  * Serializer for taxi entries.
@@ -27,7 +28,8 @@ public class TaxiEntrySerializer implements Serializer<TaxiEntry> {
     /**
      * Serialize taxi entry to byte[].
      *
-     * @param data the entry which to serialize
+     * @param data
+     *            the entry which to serialize
      * @return the resulting byte[]
      */
     @Override

@@ -13,12 +13,12 @@ public class Constants {
 
     // Speeding configuration
     public static final Double SPEED_LIMIT = 50D;
-    
-    //Long/Lat value which signals stop
-    public static final Double STOP_TOKEN_VALUE=360D;
-    
-    //Time in ms for periodically sending taxi location information to dashboard
-    public static final Long  PROPAGATE_LOCATION_PERIOD=5000L;
+
+    // Long/Lat value which signals stop
+    public static final Double STOP_TOKEN_VALUE = 360D;
+
+    // Time in ms for periodically sending taxi location information to dashboard
+    public static final Long PROPAGATE_LOCATION_PERIOD = 5000L;
 
     // Dashboard sub-URI configuration
     public static final String PROPAGATE_LOCATION_URI = "/add";
@@ -26,6 +26,6 @@ public class Constants {
     public static final String NOTIFY_AREA_VIOLATION_URI = "/violation";
     public static final String NOTIFY_SPEEDING_INCIDENT_URI = "/incident";
     public static final String NOTIFY_TAXI_STOPPED_URI = "/stop";
-    public static final String OPTIMIZED_PROPAGATE_LOCATION_URI="/location";
+    public static final String OPTIMIZED_PROPAGATE_LOCATION_URI = "/location";
 
 }

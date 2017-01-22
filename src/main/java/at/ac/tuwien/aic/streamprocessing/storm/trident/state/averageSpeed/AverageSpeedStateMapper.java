@@ -1,8 +1,9 @@
 package at.ac.tuwien.aic.streamprocessing.storm.trident.state.averageSpeed;
 
-import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 import org.apache.storm.trident.tuple.TridentTuple;
 import org.apache.storm.tuple.Values;
+
+import at.ac.tuwien.aic.streamprocessing.storm.trident.state.objects.StateObjectMapper;
 
 public class AverageSpeedStateMapper implements StateObjectMapper<AverageSpeedState> {
 
@@ -22,10 +23,7 @@ public class AverageSpeedStateMapper implements StateObjectMapper<AverageSpeedSt
 
     @Override
     public AverageSpeedState fromTuple(TridentTuple tuple) {
-        return new AverageSpeedState(
-                tuple.getIntegerByField("observations"),
-                tuple.getDoubleByField("speedSum")
-        );
+        return new AverageSpeedState(tuple.getIntegerByField("observations"), tuple.getDoubleByField("speedSum"));
     }
 
     @Override
@@ -36,17 +34,12 @@ public class AverageSpeedStateMapper implements StateObjectMapper<AverageSpeedSt
 
     @Override
     public AverageSpeedState parseState(TridentTuple tuple) {
-        return new AverageSpeedState(
-                tuple.getIntegerByField("observations"),
-                tuple.getDoubleByField("speedSum")
-        );
+        return new AverageSpeedState(tuple.getIntegerByField("observations"), tuple.getDoubleByField("speedSum"));
     }
 
     @Override
     public String serializeToRedis(AverageSpeedState state) {
-        return String.format("%s,%s",
-                state.getObservations(), state.getSpeedSum()
-        );
+        return String.format("%s,%s", state.getObservations(), state.getSpeedSum());
     }
 
     @Override

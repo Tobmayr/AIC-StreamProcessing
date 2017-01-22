@@ -15,10 +15,14 @@ public class TaxiEntry implements Serializable {
     /**
      * Instantiates a new Taxi entry.
      *
-     * @param taxiId    the taxi id
-     * @param timestamp the timestamp
-     * @param latitude  the latitude
-     * @param longitude the longitude
+     * @param taxiId
+     *            the taxi id
+     * @param timestamp
+     *            the timestamp
+     * @param latitude
+     *            the latitude
+     * @param longitude
+     *            the longitude
      */
     public TaxiEntry(int taxiId, LocalDateTime timestamp, double latitude, double longitude) {
         this.taxiId = taxiId;
@@ -77,24 +81,24 @@ public class TaxiEntry implements Serializable {
 
     @Override
     public String toString() {
-        return "TaxiEntry{" +
-                "taxiId=" + taxiId +
-                ", timestamp=" + timestamp +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                '}';
+        return "TaxiEntry{" + "taxiId=" + taxiId + ", timestamp=" + timestamp + ", latitude=" + latitude + ", longitude=" + longitude + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         TaxiEntry taxiEntry = (TaxiEntry) o;
 
-        if (taxiId != taxiEntry.taxiId) return false;
-        if (Double.compare(taxiEntry.latitude, latitude) != 0) return false;
-        if (Double.compare(taxiEntry.longitude, longitude) != 0) return false;
+        if (taxiId != taxiEntry.taxiId)
+            return false;
+        if (Double.compare(taxiEntry.latitude, latitude) != 0)
+            return false;
+        if (Double.compare(taxiEntry.longitude, longitude) != 0)
+            return false;
         return timestamp != null ? timestamp.equals(taxiEntry.timestamp) : taxiEntry.timestamp == null;
 
     }
