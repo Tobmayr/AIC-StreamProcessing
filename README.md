@@ -24,17 +24,18 @@ Starting the topology
 cd ~/Desktop
 
 # start storm topology
-# all dependencies (zookeeper, kafka, redis and dashboard server are started along with it)
+# all dependencies (zookeeper, kafka, and redis are started along with it)
 # wait a bit until the necessary topics have been created
 ./startTopo.sh
+
+# start the dashboard server and open a browser pointing to the it, can be restarted any time.
+./startUI.sh
 
 # start the data provider which produces data into a kafka topic
 # it takes the submission speed as the only parameter which is a speedup-factor
 # i.e. 100 makes 100 (virtual) seconds go by in a single wall-clock second
-./startProvider.sh speedup-factor
+./startProvider.sh 100
 
-# open a browser pointing to the dashboard
-./runFirefox.sh
 ```
 
 Testdata

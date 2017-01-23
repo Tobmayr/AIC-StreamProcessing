@@ -46,7 +46,7 @@ Adapted from [Link](http://storm.apache.org/releases/current/Setting-up-a-Storm-
     sleep 5
 ./bin/kafka_2.11-0.10.1.0/bin/kafka-server-start.sh ./conf/server.properties &
     sleep 5
-./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+./bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 5 --topic test
 ./bin/apache-storm-1.0.2/bin/storm nimbus & 
     sleep 5
 ./bin/apache-storm-1.0.2/bin/storm supervisor & 
@@ -298,12 +298,12 @@ VBoxManage guestcontrol g2t1 run "/bin/sh" --username ubuntu  --password ubuntu 
 
 VBoxManage startvm g2t1
 VBoxManage guestcontrol g2t1 run "/bin/sh" --username ubuntu  --password ubuntu -- -c "cd /home/ubuntu/  \
-  ; echo '~/gradlew runTopology' >> ~/Desktop/startTopo.sh \
-  ; echo '~/gradlew runDataprovider -Pspeed=$1' >> ~/Desktop/startProvider.sh \
-  ; echo 'cd ~/src/main/resources/dashboard/ ; npm start' >> ~/Desktop/startWebserver.sh \
-  ; echo 'firefox localhost:3000/optimization.html' >> ~/Desktop/runFirefox.sh \
+  ; echo 'cd ~; ./gradlew runOptimizedTopology' > ~/Desktop/startTopo.sh \
+  ; echo 'cd ~; ./gradlew runDataprovider -Pspeed=\$1 -Pdata=./testdata/taxi_sub_data.csv' > ~/Desktop/startProvider.sh \
+  ; echo 'cd ~/src/main/resources/dashboard/ \n npm start & \n firefox localhost:3000/optimization.html' > ~/Desktop/startUI.sh \
   ; chmod a+x ~/Desktop/*.sh \
   ;"
+
 
 # TODO reset demodata
 # runTopology; startDashboard; runDataprovider -Pspeed=100000
